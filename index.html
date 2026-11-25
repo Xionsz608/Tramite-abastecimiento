@@ -1078,6 +1078,8 @@ html.calm *,html.calm *::before,html.calm *::after{animation-duration:.01ms!impo
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
 <script>
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -1182,6 +1184,22 @@ const STORES = ['carpetas', 'expedientes', 'usuarios', 'tramites', 'config', 're
 const DB = (() => {
   let db = null;
   const mem = Object.fromEntries(STORES.map(s => [s, []]));
+  const ORIGEN = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const cloud = { on: false, sb: null, onChange: null };
+  /* Los PDF (Blob) viajan como base64 dentro del JSON */
+  const b2s = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+  const s2b = (b64, type) => { const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type }); };
+  async function enc(v) {
+    if (v instanceof Blob) return { __blob: await b2s(v), type: v.type };
+    if (Array.isArray(v)) return Promise.all(v.map(enc));
+    if (v && typeof v === 'object') { const o = {}; for (const k of Object.keys(v)) o[k] = await enc(v[k]); return o; }
+    return v;
+  }
+  function dec(v) {
+    if (Array.isArray(v)) return v.map(dec);
+    if (v && typeof v === 'object') { if (typeof v.__blob === 'string') return s2b(v.__blob, v.type); const o = {}; for (const k of Object.keys(v)) o[k] = dec(v[k]); return o; }
+    return v;
+  }
   async function open() {
     try {
       db = await new Promise((res, rej) => {
@@ -1191,6 +1209,20 @@ const DB = (() => {
         r.onerror = () => rej(r.error);
       });
     } catch (e) { db = null; }
+    const c = window.SUPABASE_CONFIG;
+    if (c && c.url && c.anonKey && window.supabase) {
+      try {
+        cloud.sb = window.supabase.createClient(c.url, c.anonKey);
+        const { error } = await cloud.sb.from('registros').select('id').limit(1);
+        if (error) throw error;
+        cloud.on = true;
+        cloud.sb.channel('registros-demo').on('postgres_changes', { event: '*', schema: 'public', table: 'registros' }, p => {
+          const row = p.new && p.new.store ? p.new : null, old = p.old || {};
+          if (row && row.origen === ORIGEN) return;
+          if (cloud.onChange) cloud.onChange({ store: row ? row.store : old.store, id: row ? row.id : old.id, tipo: p.eventType });
+        }).subscribe();
+      } catch (e) { console.warn('Base compartida no disponible; se usa el navegador.', e); cloud.on = false; }
+    }
   }
   function tx(store, mode, fn) {
     return new Promise((res, rej) => {
@@ -1201,16 +1233,44 @@ const DB = (() => {
       t.onabort = () => rej(t.error);
     });
   }
-  async function all(store) { if (!db) return [...mem[store]]; try { return await tx(store, 'readonly', s => s.getAll()); } catch (e) { return []; } }
-  async function put(store, obj) {
+  async function localAll(store) { if (!db) return [...mem[store]]; try { return await tx(store, 'readonly', s => s.getAll()); } catch (e) { return []; } }
+  async function localPut(store, obj) {
     if (!db) { const i = mem[store].findIndex(x => x.id === obj.id); if (i >= 0) mem[store][i] = obj; else mem[store].push(obj); return; }
     return tx(store, 'readwrite', s => s.put(obj));
   }
-  async function del(store, id) {
+  async function localDel(store, id) {
     if (!db) { mem[store] = mem[store].filter(x => x.id !== id); return; }
     return tx(store, 'readwrite', s => s.delete(id));
   }
-  return { open, all, put, del, get persistent() { return !!db; } };
+  async function all(store) {
+    if (cloud.on) {
+      try {
+        const out = []; let from = 0;
+        for (;;) {
+          const { data, error } = await cloud.sb.from('registros').select('data').eq('store', store).order('actualizado').range(from, from + 499);
+          if (error) throw error;
+          out.push(...data.map(r => dec(r.data)));
+          if (data.length < 500) break; from += 500;
+        }
+        return out;
+      } catch (e) { console.warn('Lectura en la nube falló', e); }
+    }
+    return localAll(store);
+  }
+  async function put(store, obj) {
+    await localPut(store, obj);
+    if (cloud.on) {
+      try {
+        const { error } = await cloud.sb.from('registros').upsert({ store, id: String(obj.id), data: await enc(obj), origen: ORIGEN, actualizado: new Date().toISOString() });
+        if (error) throw error;
+      } catch (e) { console.warn('Escritura en la nube falló', e); if (window.toast) toast('No se pudo sincronizar con la base compartida', 'warn'); }
+    }
+  }
+  async function del(store, id) {
+    await localDel(store, id);
+    if (cloud.on) { try { await cloud.sb.from('registros').delete().eq('store', store).eq('id', String(id)); } catch (e) {} }
+  }
+  return { open, all, put, del, cloud, get persistent() { return !!db; }, get shared() { return cloud.on; } };
 })();
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 
@@ -3313,8 +3373,7 @@ async function saveTramite(t) {
    Con servidor, este mismo aviso llegará por WebSocket a todos los equipos. */
 const canal = (() => { try { return 'BroadcastChannel' in window ? new BroadcastChannel('archivo-digital') : null; } catch (e) { return null; } })();
 function avisarCambio(t) { try { if (canal) canal.postMessage({ k: 'tramite', id: t.id, n: t.historial.length }); } catch (e) {} }
-if (canal) canal.onmessage = async ev => {
-  const d = ev.data || {}; if (d.k !== 'tramite') return;
+async function alCambioTramite(d) {
   const prev = state.tramites.find(x => x.id === d.id), antes = prev ? prev.historial.length : 0, antesP = prev ? (prev.pases || []).length : 0;
   state.tramites = await DB.all('tramites');
   if (!state.userId) return;
@@ -3327,6 +3386,18 @@ if (canal) canal.onmessage = async ev => {
   const h = nuevos[nuevos.length - 1]; if (!h) return;
   if (u.rol === 'area') { if (t.creadorId === u.id || t.area === u.area) { const n = ntfOf(h); if (n) toast(`${t.codigo}: ${n.msg}`, n.cls === 'bad' ? 'warn' : ''); } }
   else if (actionsFor(t, u).some(a => a.k !== 'archivo')) toast(`${t.codigo}: ${h.accion} · requiere tu atención`);
+}
+if (canal) canal.onmessage = ev => { const d = ev.data || {}; if (d.k === 'tramite' && !DB.shared) alCambioTramite(d); };
+/* Con base compartida: cualquier cambio de otro equipo llega por Realtime */
+DB.cloud.onChange = async ev => {
+  if (ev.store === 'tramites') return alCambioTramite({ id: ev.id });
+  if (ev.store === 'usuarios') state.usuarios = await DB.all('usuarios');
+  else if (ev.store === 'auditoria') state.auditoria = await DB.all('auditoria');
+  else if (ev.store === 'registro') state.registro = await DB.all('registro');
+  else if (ev.store === 'ordenes') state.ordenes = await DB.all('ordenes');
+  else if (ev.store === 'emitidos') state.emitidos = await DB.all('emitidos');
+  else return;
+  if (state.userId) refreshView();
 };
 async function setPdf(t, bytes, accion = 'Nueva versión') {
   bytes = await withPdfMeta(bytes, t);
@@ -4567,7 +4638,8 @@ async function seed() {
   await ensureAuthData();
   await migrateData();
   fillFolderSelect();
-  if (!DB.persistent) {
+  if (DB.shared) { const n = $('#storageNote'); n.innerHTML = `${ic('check', 16)}<span>Base compartida activa: los trámites se ven en todos los equipos conectados (demo con datos ficticios).</span>`; }
+  else if (!DB.persistent) {
     const n = $('#storageNote'); n.classList.add('warn');
     n.innerHTML = `${ic('alert', 16)}<span>Este navegador no permite guardar datos de forma permanente (por ejemplo, en modo incógnito). Lo que hagas se perderá al cerrar la página.</span>`;
   }
