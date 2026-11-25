@@ -1,0 +1,32 @@
+# Documentos reales: nunca se suben al repositorio
+expedientes/
+uploads/
+escaneos/
+documentos-reales/
+firmas/
+sellos/
+*.pdf
+*.xlsm
+*.xlsx
+*.csv
+
+# Respaldos y exportaciones del navegador
+respaldo*/
+backup*/
+*.json.bak
+
+# Credenciales y configuración local
+.env
+.env.*
+*.key
+*.pem
+config.local.*
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
