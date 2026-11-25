@@ -16,8 +16,8 @@ Los requerimientos de las áreas usuarias (bienes, servicios, conformidades, mod
 |---|---|
 | Área usuaria | Sube requerimientos de **bienes, servicios u obras**, sigue en qué paso están, recibe notificaciones, subsana observaciones y recibe documentos de la Unidad. |
 | Secretaría | Verifica los requisitos, recibe con N.° de registro y eleva a Jefatura. |
-| Jefatura | Revisa el requerimiento y lo **deriva** al responsable de su ejecución (o lo observa). Administra usuarios. |
-| Especialista | Inicia la ejecución de lo derivado, registra las etapas del expediente de contratación y lo marca como atendido. |
+| Jefatura | Revisa el requerimiento y lo **deriva a un equipo de especialistas** con un responsable principal (o lo observa). Administra usuarios. |
+| Especialista | Revisa su parte, envía avances a otros especialistas, da su conformidad y registra las etapas del expediente. El responsable inicia la ejecución y concluye el trámite. |
 
 **Flujo:** área usuaria → Secretaría (recepción) → Jefatura (revisión y derivación) → especialista (ejecución) → archivo en Carpetas.
 
@@ -26,6 +26,8 @@ Los requerimientos de las áreas usuarias (bienes, servicios, conformidades, mod
 **Funciones principales**
 
 - Seguimiento por etapas con barra de avance y notificaciones al área usuaria en cada cambio (recepción, documento abierto por Secretaría o Jefatura, derivación, inicio de la ejecución, observaciones y conclusión).
+- Equipo de especialistas por requerimiento. Al derivar, el sistema sugiere el equipo según el objeto, la cuantía (hasta 8 UIT o más), si es común (ficha técnica u homologación) y si está en los catálogos electrónicos de acuerdo marco. Funciones: programación y certificación, indagación de mercado, catálogos y acuerdos marco, procedimientos de selección, contrataciones hasta 8 UIT, y órdenes y ejecución contractual. Cada etapa del expediente muestra quién la tiene a cargo.
+- Avances de especialista a especialista, con mensaje y adjunto (internos: el área usuaria no los ve), y conformidad de cada parte. El área usuaria solo ve cuántas partes están conformes.
 - Actividad simultánea: las ventanas abiertas se actualizan solas cuando otro usuario mueve un trámite. En el prototipo funciona entre pestañas del mismo navegador; con servidor llegará a todos los equipos.
 - Código de barras (Code 128) en la primera página, cargo de recepción en PDF y huella SHA-256 de cada versión del documento.
 - Tres tipos de requerimiento: bienes (con EETT), servicios (con TDR) y obras (con expediente técnico).

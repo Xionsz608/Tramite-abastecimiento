@@ -693,6 +693,26 @@ table.rtbl{border-collapse:collapse;width:100%;font-size:13px;min-width:1000px}
 .rtbl .linkbtn{text-align:left;padding:0;font-size:13px}
 
 /* ---------- Requerimiento, verificación, plazos y expediente ---------- */
+.eq-rows{display:grid;gap:8px}
+.eq-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.eq-row.off{opacity:.55}
+.eq-row.off select,.eq-row.off .eq-resp{pointer-events:none}
+.eq-on{display:flex!important;flex-direction:row!important;gap:10px;align-items:flex-start;justify-content:flex-start;cursor:pointer;text-align:left;margin:0}
+.eq-on input{width:auto!important;flex:none;margin:3px 0 0}
+.eq-on>span{flex:1;min-width:0}
+.eq-on b{display:block;font-size:13.5px}.eq-on small{display:block;font-size:12px;color:var(--muted);line-height:1.35}
+.eq-resp{display:flex;gap:6px;align-items:center;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
+.eq-m{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--border)}
+.eq-m>span:nth-child(2){flex:1;min-width:0}.eq-m b{display:block;font-size:13px}.eq-m small{display:block;font-size:11.5px;color:var(--muted)}
+.av.sm{width:28px;height:28px;font-size:11px;flex:none}
+.pases{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.pases li{padding:9px 11px;border-radius:10px;background:var(--surface-2);border-left:3px solid var(--primary)}
+.pases li.nuevo{box-shadow:0 0 0 2px color-mix(in srgb,var(--primary) 35%,transparent)}
+.pases li b{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:12.5px}.pases li time{display:block;font-size:11px;color:var(--muted)}
+.pases li p{margin:4px 0 0;font-size:13px;white-space:pre-wrap}.pases li .chip-st{margin-top:4px}
+.fn-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 12px;margin:4px 0}
+fieldset.fn-set{border:0;padding:0;margin:0}
+@media (max-width:640px){.eq-row{grid-template-columns:1fr}}
 .pasos{list-style:none;margin:10px 0 14px;padding:0;display:flex;gap:4px}
 .pasos li{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);position:relative}
 .pasos li::before{content:'';position:absolute;top:11px;left:-50%;right:50%;height:2px;background:var(--line,#d9dee5);z-index:0}
@@ -1632,10 +1652,12 @@ const PREFS_KEY = 'ad.prefs', LAST_KEY = 'ad.last';
 const HERO = { area: 'Trámites digitales', abast: 'Revisión documentaria' };
 const heroTitle = () => (prefs.msg || '').trim() || HERO[$('#login').dataset.portal] || HERO.area;
 const DEFAULT_UNIDAD = 'Unidad de Abastecimiento';
-const DEMO_MAILS = ['obras@entidad.gob.pe', 'rrhh@entidad.gob.pe', 'abastecimiento@entidad.gob.pe', 'jefe.abastecimiento@entidad.gob.pe', 'adquisiciones@entidad.gob.pe', 'programacion@entidad.gob.pe'];
+const DEMO_MAILS = ['obras@entidad.gob.pe', 'rrhh@entidad.gob.pe', 'abastecimiento@entidad.gob.pe', 'jefe.abastecimiento@entidad.gob.pe', 'adquisiciones@entidad.gob.pe', 'programacion@entidad.gob.pe', 'seleccion@entidad.gob.pe', 'mercado@entidad.gob.pe'];
 const ESPECIALISTAS_DEMO = [
-  { nombre: 'Miguel Huanca Mamani', cargo: 'Especialista en Adquisiciones', area: 'Unidad de Abastecimiento', rol: 'especialista', correo: 'adquisiciones@entidad.gob.pe', color: '#1d3fa8' },
-  { nombre: 'Ana Quispe Larico', cargo: 'Especialista en Programación', area: 'Unidad de Abastecimiento', rol: 'especialista', correo: 'programacion@entidad.gob.pe', color: '#1e6b3a' }
+  { nombre: 'Miguel Huanca Mamani', cargo: 'Especialista en Adquisiciones', area: 'Unidad de Abastecimiento', rol: 'especialista', correo: 'adquisiciones@entidad.gob.pe', color: '#1d3fa8', funciones: ['menores', 'contratos'] },
+  { nombre: 'Ana Quispe Larico', cargo: 'Especialista en Programación', area: 'Unidad de Abastecimiento', rol: 'especialista', correo: 'programacion@entidad.gob.pe', color: '#1e6b3a', funciones: ['programacion'] },
+  { nombre: 'Rocío Mamani Coaquira', cargo: 'Especialista en Procedimientos de Selección', area: 'Unidad de Abastecimiento', rol: 'especialista', correo: 'seleccion@entidad.gob.pe', color: '#5b2a86', funciones: ['seleccion'] },
+  { nombre: 'Edwin Apaza Ccama', cargo: 'Especialista en Indagación de Mercado y Catálogos', area: 'Unidad de Abastecimiento', rol: 'especialista', correo: 'mercado@entidad.gob.pe', color: '#a3201a', funciones: ['mercado', 'catalogo'] }
 ];
 const PREF_DEF = { accent: 'auto', theme: 'auto', scale: 100, glass: true, calm: false, unidad: '', msg: '', logo: '', showDemo: true, rememberEmail: false, defaultPortal: '' };
 const ACCENTS = {
@@ -2018,23 +2040,26 @@ async function userForm(x) {
       <label class="field full"><span>Área u oficina <em>*</em></span><input name="area" list="dlAreas" value="${esc(x?.area || '')}" maxlength="80"><datalist id="dlAreas">${areas.map(a => `<option value="${esc(a)}"></option>`).join('')}</datalist></label>
       <label class="field full">Tipo de acceso<select name="rol" ${self ? 'disabled' : ''}>${Object.keys(ROLES).map(k => `<option value="${k}" ${(x?.rol || 'area') === k ? 'selected' : ''}>${k === 'area' ? 'Área usuaria — portal de áreas' : ROLES[k].label + ' — portal de Abastecimiento'}</option>`).join('')}</select></label>
       ${self ? '<p class="small full" style="margin:0">No puedes cambiar tu propio tipo de acceso.</p>' : ''}
+      <fieldset class="field full fn-set" ${(x?.rol || 'area') === 'especialista' ? '' : 'hidden'}><span>Funciones del especialista</span><div class="fn-grid">${FN_ORDEN.map(k => `<label class="check"><input type="checkbox" name="fn" value="${k}" ${(x?.funciones || []).includes(k) ? 'checked' : ''}> ${esc(fnLabel(k))}</label>`).join('')}</div><small class="small">Sirven para sugerir el equipo cuando Jefatura deriva un requerimiento.</small></fieldset>
       ${isNew ? `<label class="field full">Contraseña temporal<input name="pass" value="${genPass()}" maxlength="40"></label><p class="small full" style="margin:0">La persona deberá cambiarla en su primer ingreso.</p>` : ''}
     </form>`,
     buttons: [{ label: 'Cancelar', value: null }, { label: isNew ? 'Crear usuario' : 'Guardar', cls: 'btn-primary', value: d => {
-      const f = Object.fromEntries(new FormData($('form', d))); Object.keys(f).forEach(k => f[k] = String(f[k]).trim());
+      const fd = new FormData($('form', d)), f = Object.fromEntries(fd); Object.keys(f).forEach(k => f[k] = String(f[k]).trim());
+      f.funciones = fd.getAll('fn'); delete f.fn;
       if (self) f.rol = x.rol;
       if (!f.nombre || !f.cargo || !f.area || !f.correo) { toast('Completa todos los campos obligatorios', 'warn'); return KEEP; }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.correo)) { toast('El correo no es válido', 'warn'); return KEEP; }
       if (state.usuarios.some(u => u.correo.toLowerCase() === f.correo.toLowerCase() && u.id !== x?.id)) { toast('Ya existe una cuenta con ese correo', 'warn'); return KEEP; }
       if (isNew && f.pass.length < 6) { toast('La contraseña temporal es muy corta', 'warn'); return KEEP; }
-      return f; } }] });
+      return f; } }],
+    onOpen: d => { const sel = $('[name=rol]', d); if (sel) sel.onchange = () => { $('.fn-set', d).hidden = sel.value !== 'especialista'; }; } });
   if (!r) return;
   if (isNew) {
-    const u = { id: uid(), nombre: r.nombre, cargo: r.cargo, area: r.area, correo: r.correo.toLowerCase(), rol: r.rol, color: r.rol === 'jefe' ? SEAL_COLORS[1][0] : SEAL_COLORS[0][0], firma: null, selloAreaImg: null, postFirmaImg: null, activo: true, mustChange: true };
+    const u = { id: uid(), nombre: r.nombre, cargo: r.cargo, area: r.area, correo: r.correo.toLowerCase(), rol: r.rol, funciones: r.rol === 'especialista' ? r.funciones : [], color: r.rol === 'jefe' ? SEAL_COLORS[1][0] : SEAL_COLORS[0][0], firma: null, selloAreaImg: null, postFirmaImg: null, activo: true, mustChange: true };
     await setPassword(u, r.pass); await DB.put('usuarios', u); state.usuarios.push(u); audit('Creación de cuenta', `${u.nombre} · ${ROLES[u.rol].label}`, u.id);
     renderUsuarios(); showCredentials(u, r.pass, 'Usuario creado');
   } else {
-    Object.assign(x, { nombre: r.nombre, cargo: r.cargo, area: r.area, correo: r.correo.toLowerCase(), rol: r.rol });
+    Object.assign(x, { nombre: r.nombre, cargo: r.cargo, area: r.area, correo: r.correo.toLowerCase(), rol: r.rol, funciones: r.rol === 'especialista' ? r.funciones : [] });
     await DB.put('usuarios', x); if (self) updateUserChip();
     renderUsuarios(); toast('Usuario actualizado');
   }
@@ -2087,7 +2112,7 @@ $('#usersWrap').addEventListener('click', async e => {
    ===================================================================== */
 const CURSO = ['enviado', 'recibido', 'derivado', 'aprobado', 'ejecucion'];
 const enJefatura = t => t.estado === 'derivado' || t.estado === 'recibido';
-const myTramites = u => u.rol === 'area' ? state.tramites.filter(t => t.creadorId === u.id || t.area === u.area) : u.rol === 'especialista' ? state.tramites.filter(t => t.asignadoId === u.id) : state.tramites.slice();
+const myTramites = u => u.rol === 'area' ? state.tramites.filter(t => t.creadorId === u.id || t.area === u.area) : u.rol === 'especialista' ? state.tramites.filter(t => t.asignadoId === u.id || (t.equipo || []).some(m => m.uid === u.id)) : state.tramites.slice();
 const userName = id => { const x = state.usuarios.find(u => u.id === id); return x ? x.nombre : '—'; };
 const rolCorto = r => ({ secretaria: 'Secretaría', jefe: 'Jefatura', especialista: 'el responsable de ejecución', area: 'el área usuaria' }[r] || 'Abastecimiento');
 /* Estados tal como los ve el área usuaria */
@@ -2109,14 +2134,14 @@ const staffAbast = () => state.usuarios.filter(x => x.rol !== 'area' && x.activo
 function tabsFor(role) {
   if (role === 'area') return [['curso', 'En curso', t => CURSO.includes(t.estado)], ['obs', 'Observados', t => t.estado === 'observado'], ['ok', 'Concluidos', t => t.estado === 'revisado'], ['all', 'Todos', () => true]];
   if (role === 'secretaria') return [['env', 'Por recibir', t => t.estado === 'enviado'], ['der', 'Revisión de Jefatura', enJefatura], ['apr', 'Derivados', t => t.estado === 'aprobado'], ['eje', 'Ejecución', t => t.estado === 'ejecucion'], ['venc', 'Vencidos', vencido], ['all', 'Todos', () => true]];
-  if (role === 'especialista') return [['apr', 'Por iniciar', t => t.estado === 'aprobado'], ['eje', 'Ejecución', t => t.estado === 'ejecucion'], ['ok', 'Atendidos', t => t.estado === 'revisado'], ['venc', 'Vencidos', vencido], ['all', 'Todos', () => true]];
+  if (role === 'especialista') return [['apr', 'Por iniciar', t => t.estado === 'aprobado' && t.asignadoId === me().id], ['eje', 'Ejecución', t => t.estado === 'ejecucion' && t.asignadoId === me().id], ['eq', 'En equipo', t => EQ_ACTIVO.includes(t.estado) && t.asignadoId !== me().id && enEquipo(me(), t)], ['pas', 'Avances recibidos', t => pasesPara(me(), t).length > 0], ['ok', 'Atendidos', t => t.estado === 'revisado'], ['venc', 'Vencidos', vencido], ['all', 'Todos', () => true]];
   return [['der', 'Revisión de Jefatura', enJefatura], ['apr', 'Derivados', t => t.estado === 'aprobado'], ['eje', 'Ejecución', t => t.estado === 'ejecucion'], ['ok', 'Concluidos', t => t.estado === 'revisado'], ['obs', 'Observados', t => t.estado === 'observado'], ['venc', 'Vencidos', vencido], ['all', 'Todos', () => true]];
 }
 function pendingCount(u) {
   if (!u) return 0;
   if (u.rol === 'secretaria') return state.tramites.filter(t => t.estado === 'enviado').length;
   if (u.rol === 'jefe') return state.tramites.filter(enJefatura).length;
-  if (u.rol === 'especialista') return myTramites(u).filter(t => t.estado === 'aprobado' || t.estado === 'ejecucion').length;
+  if (u.rol === 'especialista') return myTramites(u).filter(t => (t.asignadoId === u.id && (t.estado === 'aprobado' || t.estado === 'ejecucion')) || pasesPara(u, t).length || (EQ_ACTIVO.includes(t.estado) && t.asignadoId !== u.id && miParte(u, t))).length;
   return myTramites(u).reduce((a, t) => a + unreadOf(t).length, 0);
 }
 
@@ -2246,6 +2271,7 @@ function ntfOf(h) {
   if (a.startsWith('Derivado para ejecución')) return { msg: a.replace('Derivado para ejecución a', 'Asignado para su ejecución a'), ic: 'user' };
   if (a.startsWith('Reasignado')) return { msg: a.replace('Reasignado a', 'Nuevo responsable de ejecución:'), ic: 'user' };
   if (a.startsWith('Respuesta despachada:')) return { msg: `La Unidad te envió ${a.slice(22)}${h.nota ? ' · ' + h.nota : ''}`, ic: 'mail', cls: 'good' };
+  if (a.startsWith('Conformidad del equipo:')) return { msg: `Avance de la revisión: ${a.slice(23)} conforme`, ic: 'check' };
   if (a.startsWith('Expediente de contratación:')) return { msg: `Avance de tu requerimiento: ${a.slice(28)}`, ic: 'layers' };
   if (a.startsWith('Conformidad recibida')) return { msg: `${a}: empieza a correr el plazo de pago`, ic: 'check' };
   if (a.startsWith('Atendido · pago')) return { msg: `Pago registrado${h.nota ? ': ' + h.nota : ''}`, ic: 'check', cls: 'good' };
@@ -2256,7 +2282,7 @@ function ntfOf(h) {
 const ntfList = t => t.historial.map(h => ({ h, n: ntfOf(h) })).filter(x => x.n);
 const unreadOf = t => ntfList(t).filter(x => x.h.fecha > (t.leidoArea || ''));
 const lastNtf = t => { const l = ntfList(t); return l.length ? l[l.length - 1] : null; };
-const STAGE_OWNER = { enviado: u => u.rol === 'secretaria', recibido: u => u.rol === 'jefe', derivado: u => u.rol === 'jefe', aprobado: (u, t) => t.asignadoId === u.id, ejecucion: (u, t) => t.asignadoId === u.id };
+const STAGE_OWNER = { enviado: u => u.rol === 'secretaria', recibido: u => u.rol === 'jefe', derivado: u => u.rol === 'jefe', aprobado: (u, t) => t.asignadoId === u.id || enEquipo(u, t), ejecucion: (u, t) => t.asignadoId === u.id || enEquipo(u, t) };
 async function markSeen(t, u) {
   if (u.rol === 'area') {
     if ((t.creadorId === u.id || t.area === u.area) && unreadOf(t).length) { t.leidoArea = new Date().toISOString(); await DB.put('tramites', t); updateBadge(); return true; }
@@ -3289,12 +3315,14 @@ const canal = (() => { try { return 'BroadcastChannel' in window ? new Broadcast
 function avisarCambio(t) { try { if (canal) canal.postMessage({ k: 'tramite', id: t.id, n: t.historial.length }); } catch (e) {} }
 if (canal) canal.onmessage = async ev => {
   const d = ev.data || {}; if (d.k !== 'tramite') return;
-  const prev = state.tramites.find(x => x.id === d.id), antes = prev ? prev.historial.length : 0;
+  const prev = state.tramites.find(x => x.id === d.id), antes = prev ? prev.historial.length : 0, antesP = prev ? (prev.pases || []).length : 0;
   state.tramites = await DB.all('tramites');
   if (!state.userId) return;
   const u = me(), t = state.tramites.find(x => x.id === d.id);
   updateBadge(); refreshView();
   if (!t || !u) return;
+  const pNuevo = (t.pases || []).slice(antesP).filter(x => x.para === u.id).pop();
+  if (pNuevo) { toast(`${t.codigo}: ${nomCorto(userName(pNuevo.de))} te envió ${pNuevo.tipo === 'obs' ? 'observaciones' : 'un avance'}: ${pNuevo.msg.slice(0, 80)}`, pNuevo.tipo === 'obs' ? 'warn' : ''); return; }
   const nuevos = t.historial.slice(antes).filter(h => h.uid !== u.id && (u.rol === 'area' || h.tipo !== 'visto'));
   const h = nuevos[nuevos.length - 1]; if (!h) return;
   if (u.rol === 'area') { if (t.creadorId === u.id || t.area === u.area) { const n = ntfOf(h); if (n) toast(`${t.codigo}: ${n.msg}`, n.cls === 'bad' ? 'warn' : ''); } }
@@ -3496,6 +3524,7 @@ function actionsFor(t, u) {
   if (t.estado === 'ejecucion' && t.asignadoId === u.id) a.push(rutaOf(t) === 'conformidad' ? { k: 'atender', label: 'Registrar pago y concluir', ic: 'check', cls: 'btn-primary' } : { k: 'atender', label: 'Marcar como atendido', ic: 'check', cls: 'btn-primary' });
   if (u.rol === 'jefe' && t.estado === 'ejecucion' && t.asignadoId !== u.id) a.push({ k: 'reasignar', label: 'Reasignar responsable', ic: 'user' });
   if (u.rol === 'area' && mine && t.estado === 'observado') a.push({ k: 'subsanar', label: 'Subsanar y reenviar', ic: 'send', cls: 'btn-primary' });
+  a.push(...accionesEquipo(t, u));
   if (t.estado === 'revisado' && t.archivoCarpeta && u.rol !== 'area') a.push({ k: 'archivo', label: 'Ver en Carpetas', ic: 'folder' });
   return a;
 }
@@ -3540,6 +3569,7 @@ async function openTramite(id) {
       const showDoc = async (blob, name) => { if (vclean) { try { vclean(); } catch (er) {} vclean = null; } const fn = await mountViewer($('.viewer', d), blob, name); if (d.isConnected) vclean = fn; else fn(); };
       d._onClose.push(() => { if (vclean) try { vclean(); } catch (er) {} });
       showDoc(t.pdf, `${t.codigo} ${t.asunto}`);
+      if (u.rol !== 'area') marcarPasesLeidos(t, u);
       $('.tdet-side', d).addEventListener('click', async e => {
         const vb = e.target.closest('[data-ver]');
         if (vb) { const an = (t.anexos || []).find(a => a.id === vb.dataset.ver); if (vb.dataset.ver === 'main') showDoc(t.pdf, `${t.codigo} ${t.asunto}`); else if (an) showDoc(an.blob, `${t.codigo} ${an.nombre}`); $$('[data-ver]', d).forEach(x => x.classList.toggle('btn-primary', x === vb)); return; }
@@ -3596,12 +3626,12 @@ function expSummary(k, v) {
 const expDone = t => EXP_STAGES.filter(([k]) => ((t.exp || {})[k] || {}).done).length;
 function expedienteHtml(t, u) {
   if (rutaOf(t) !== 'contratacion' || !['aprobado', 'ejecucion', 'revisado'].includes(t.estado)) return '';
-  const e = t.exp || {}, done = expDone(t), edit = t.estado === 'ejecucion' && (t.asignadoId === u.id || u.rol === 'jefe'), pp = plazoPago(t);
+  const e = t.exp || {}, done = expDone(t), edit = t.estado === 'ejecucion' && (t.asignadoId === u.id || enEquipo(u, t) || u.rol === 'jefe'), pp = plazoPago(t);
   const refs = [['N.° SEACE / Pladicop', (e.seleccion || {}).numSeace], ['Orden', (e.orden || {}).numero && `${(e.orden.tipoOrden || '').replace('Orden de ', 'O. de ')} ${e.orden.numero}`], ['Certificación', (e.certificacion || {}).numero], ['Expediente SIAF', (e.orden || {}).siaf || (e.pago || {}).siaf]].filter(x => x[1]);
   return `<details class="dsec" ${t.estado === 'ejecucion' ? 'open' : ''}><summary>${ic('layers', 16)}Expediente de contratación <span class="tag info">${done}/${EXP_STAGES.length}</span></summary><div class="dsec-b">
     <div class="exp-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${EXP_STAGES.length}" aria-valuenow="${done}"><i style="width:${done / EXP_STAGES.length * 100}%"></i></div>
     ${pp ? `<p class="alert-line ${pp.cls === 'late' ? '' : pp.cls}">Pago pendiente: vence el ${fmtCorto(pp.vence)}, prorrogable hasta el ${fmtCorto(pp.venceProrroga)} (art. 67.3).</p>` : ''}
-    ${EXP_STAGES.map(([k, name, art], i) => { const v = e[k] || {}; return `<div class="exp-st ${v.done ? 'done' : ''}"><span class="ei">${v.done ? '&#10003;' : i + 1}</span><div><b>${name}</b><small>${art ? art + ' · ' : ''}${esc(expSummary(k, v) || (v.done ? 'Completada' : 'Pendiente'))}</small></div>${edit ? `<button type="button" class="btn btn-ghost" data-exp="${k}">${Object.keys(v).length ? 'Editar' : 'Registrar'}</button>` : '<span></span>'}</div>`; }).join('')}
+    ${EXP_STAGES.map(([k, name, art], i) => { const v = e[k] || {}; return `<div class="exp-st ${v.done ? 'done' : ''}"><span class="ei">${v.done ? '&#10003;' : i + 1}</span><div><b>${name}</b><small>${art ? art + ' · ' : ''}${esc(expSummary(k, v) || (v.done ? 'Completada' : 'Pendiente'))}${(() => { const ow = (t.equipo || []).filter(m => (FUNCIONES[m.fn] || {}).etapas && FUNCIONES[m.fn].etapas.includes(k)); return ow.length ? ' · A cargo de ' + esc(ow.map(m => nomCorto(userName(m.uid))).join(', ')) : ''; })()}</small></div>${edit ? `<button type="button" class="btn btn-ghost" data-exp="${k}">${Object.keys(v).length ? 'Editar' : 'Registrar'}</button>` : '<span></span>'}</div>`; }).join('')}
     ${refs.length ? `<dl class="dl" style="margin-top:10px">${refs.map(([l, v]) => `<dt>${l}</dt><dd class="mono">${esc(v)}</dd>`).join('')}</dl>` : ''}
     ${!edit && t.estado === 'ejecucion' ? `<p class="small">Lo registra ${esc(userName(t.asignadoId))}, responsable de la ejecución.</p>` : ''}
   </div></details>`;
@@ -3708,6 +3738,171 @@ function detailPlazos(t, u) {
   if (!sm && !pp) return '';
   return `<div class="sem-box">${sm ? `${semHtml(sm)}<span>${esc(sm.etapa)} · vence el ${fmtCorto(sm.vence)}</span>` : ''}${pp ? `<span class="sem ${pp.cls}">Pago</span><span>Vence el ${fmtCorto(pp.vence)} (prórroga hasta el ${fmtCorto(pp.venceProrroga)}) · ${pp.usados} de ${pp.base} días hábiles</span>` : ''}</div>`;
 }
+/* =====================================================================
+   Equipo de especialistas: revisión conjunta y pases de avance
+   Cada requerimiento puede requerir varios especialistas según la
+   naturaleza del objeto, la cuantía, si es común (ficha técnica u
+   homologación) y si está en los catálogos electrónicos de acuerdo marco.
+   ===================================================================== */
+const FUNCIONES = {
+  programacion: { l: 'Programación y certificación', etapas: ['certificacion'] },
+  mercado: { l: 'Indagación de mercado', etapas: ['mercado', 'cuantia'] },
+  catalogo: { l: 'Catálogos electrónicos y acuerdos marco', etapas: ['seleccion'] },
+  seleccion: { l: 'Procedimientos de selección', etapas: ['estrategia', 'seleccion'] },
+  menores: { l: 'Contrataciones hasta 8 UIT', etapas: ['estrategia', 'seleccion'] },
+  contratos: { l: 'Órdenes y ejecución contractual', etapas: ['orden', 'pago'] }
+};
+const FN_ORDEN = Object.keys(FUNCIONES);
+const nomCorto = n => { const w = String(n || '').trim().split(/\s+/); return w.length > 2 ? w[0] + ' ' + w[1] : String(n || ''); };
+const especialistas = () => state.usuarios.filter(x => x.rol === 'especialista' && x.activo !== false);
+const fnLabel = k => (FUNCIONES[k] || {}).l || 'Apoyo';
+const equipoDe = t => t.equipo || (t.asignadoId ? [{ uid: t.asignadoId, fn: '', estado: 'pendiente' }] : []);
+const enEquipo = (u, t) => equipoDe(t).some(m => m.uid === u.id);
+const miParte = (u, t) => equipoDe(t).find(m => m.uid === u.id && m.estado !== 'conforme');
+const pasesPara = (u, t) => (t.pases || []).filter(p => p.para === u.id && !p.leido);
+const EQ_ACTIVO = ['aprobado', 'ejecucion'];
+const EQ_ST = { pendiente: ['Pendiente', 'st-env'], observado: ['Con observaciones', 'st-obs'], conforme: ['Conforme', 'st-ok'] };
+
+/* Sugerencia del equipo según el requerimiento */
+function sugerirEquipo(t) {
+  const r = t.req || {}, e = t.exp || {}, uit = (state.config && state.config.uit) || 5500, lim = 8 * uit;
+  const valor = +((e.cuantia || {}).monto || r.valor || 0);
+  const comun = r.ficha === 'tecnica' ? 'bien o servicio común con ficha técnica' : r.ficha === 'homologacion' ? 'cuenta con ficha de homologación' : '';
+  const out = [];
+  out.push(['programacion', r.programado === 'si' ? `Verificar el ítem del CMN / PMBSO${r.itemCmn ? ' (' + r.itemCmn + ')' : ''} y la certificación` : 'No está programado: evaluar la modificación del CMN / PMBSO y la certificación']);
+  if (r.catalogo === 'si') out.push(['catalogo', 'Está en los catálogos electrónicos de acuerdo marco']);
+  else {
+    out.push(['mercado', valor ? `Confirmar el valor estimado (${fmtSoles(valor)})` : 'Determinar el valor estimado con el mercado']);
+    const obra = r.objeto === 'Obra' ? 'obra con expediente técnico' : '';
+    if (valor && valor <= lim) out.push(['menores', [`Valor estimado hasta 8 UIT (${fmtSoles(lim)})`, comun, obra].filter(Boolean).join(' · ')]);
+    else out.push(['seleccion', [valor ? 'Valor estimado mayor a 8 UIT' : 'Valor estimado aún no definido', comun, obra].filter(Boolean).join(' · ')]);
+  }
+  out.push(['contratos', 'Emisión de la orden o contrato y seguimiento de la conformidad y el pago']);
+  return out.map(([fn, motivo]) => ({ fn, motivo, uid: (especialistas().find(x => (x.funciones || []).includes(fn)) || {}).id || '' }));
+}
+
+/* Ventana para formar o editar el equipo (Jefatura) */
+async function equipoModal(t, { titulo, boton, nota }) {
+  const esp = especialistas();
+  if (!esp.length) { toast('No hay especialistas activos. Créalos en Usuarios.', 'warn'); return null; }
+  const actual = t.equipo && t.equipo.length ? t.equipo : null;
+  const filas = actual ? actual.map(m => ({ fn: m.fn, uid: m.uid, motivo: 'Integrante actual', on: true }))
+    : sugerirEquipo(t).map(x => ({ ...x, on: true }));
+  FN_ORDEN.filter(fn => !filas.some(f => f.fn === fn)).forEach(fn => filas.push({ fn, uid: (esp.find(x => (x.funciones || []).includes(fn)) || {}).id || '', motivo: 'Opcional', on: false }));
+  const resp = t.asignadoId && filas.some(f => f.on && f.uid === t.asignadoId) ? t.asignadoId : (filas.find(f => f.on && f.uid && ['seleccion', 'menores', 'catalogo'].includes(f.fn)) || filas.find(f => f.on && f.uid) || {}).uid;
+  const opt = sel => `<option value="">Selecciona…</option>${esp.map(x => `<option value="${x.id}" ${x.id === sel ? 'selected' : ''}>${esc(x.nombre)} — ${esc(x.cargo)}</option>`).join('')}`;
+  const r = t.req || {};
+  return modal({ title: titulo, cls: 'wide',
+    html: `<form class="eq-form">
+      <p class="small" style="margin:0 0 10px">${esc(t.tipoReq)} · objeto: ${esc(r.objeto || '—')} · valor estimado: ${r.valor ? fmtSoles(r.valor) : 'sin definir'} · catálogo: ${r.catalogo === 'si' ? 'sí' : r.catalogo === 'no' ? 'no' : 'no verificado'} · ficha: ${esc(labelOf(FICHAS, r.ficha))}</p>
+      <div class="eq-rows">${filas.map((f, i) => `<div class="eq-row${f.on ? '' : ' off'}" data-i="${i}">
+        <label class="eq-on"><input type="checkbox" name="on" ${f.on ? 'checked' : ''}><span><b>${esc(fnLabel(f.fn))}</b><small>${esc(f.motivo)}</small></span></label>
+        <select name="uid" data-fn="${f.fn}">${opt(f.uid)}</select>
+        <label class="eq-resp" title="Responsable principal"><input type="radio" name="resp" value="${i}" ${f.on && f.uid === resp ? 'checked' : ''}><span>Responsable</span></label></div>`).join('')}</div>
+      <p class="small">El <b>responsable</b> inicia la ejecución y concluye el trámite. Los demás revisan su parte, se envían avances entre sí y dan su conformidad.</p>
+      <label class="field" style="margin-top:8px">Proveído o indicación<textarea class="plain" rows="2" name="nota">${esc(nota)}</textarea></label></form>`,
+    buttons: [{ label: 'Cancelar', value: null }, { label: `${ic('send', 16)}${boton}`, cls: 'btn-primary', value: d => {
+      const rows = $$('.eq-row', d).map(x => ({ on: $('[name=on]', x).checked, uid: $('[name=uid]', x).value, fn: $('[name=uid]', x).dataset.fn, i: +x.dataset.i }));
+      const sel = rows.filter(x => x.on);
+      if (!sel.length) { toast('Elige al menos un especialista', 'warn'); return KEEP; }
+      if (sel.some(x => !x.uid)) { toast('Asigna un especialista a cada función marcada', 'warn'); return KEEP; }
+      const ri = $('[name=resp]:checked', d); const rr = ri && sel.find(x => x.i === +ri.value);
+      if (!rr) { toast('Marca quién es el responsable principal', 'warn'); return KEEP; }
+      return { equipo: sel.map(x => ({ uid: x.uid, fn: x.fn })), resp: rr.uid, nota: $('[name=nota]', d).value.trim() };
+    } }],
+    onOpen: d => d.addEventListener('change', e => { const row = e.target.closest('.eq-row'); if (row && e.target.name === 'on') row.classList.toggle('off', !e.target.checked); }) });
+}
+function aplicarEquipo(t, r) {
+  const prev = equipoDe(t);
+  t.equipo = r.equipo.map(m => { const p = prev.find(x => x.uid === m.uid && x.fn === m.fn); return p ? { ...p } : { uid: m.uid, fn: m.fn, estado: 'pendiente' }; });
+  t.asignadoId = r.resp;
+}
+const equipoTexto = t => equipoDe(t).map(m => `${fnLabel(m.fn)}: ${userName(m.uid)}`).join(' · ');
+
+/* Sección del detalle */
+function equipoHtml(t, u) {
+  const eq = t.equipo; if (!eq || !eq.length) return '';
+  const nOk = eq.filter(m => m.estado === 'conforme').length;
+  if (u.rol === 'area') return `<details class="dsec"><summary>${ic('users', 16)}Revisión del equipo <span class="tag info">${nOk}/${eq.length}</span></summary><div class="dsec-b">
+    ${eq.map(m => `<div class="eq-m"><span><b>${esc(fnLabel(m.fn))}</b></span><span class="chip-st ${EQ_ST[m.estado][1]}">${EQ_ST[m.estado][0]}</span></div>`).join('')}</div></details>`;
+  const pases = (t.pases || []).slice().reverse();
+  return `<details class="dsec" ${EQ_ACTIVO.includes(t.estado) && (enEquipo(u, t) || u.rol === 'jefe') ? 'open' : ''}><summary>${ic('users', 16)}Equipo de especialistas <span class="tag info">${nOk}/${eq.length} conformes</span></summary><div class="dsec-b">
+    ${eq.map(m => `<div class="eq-m"><span class="av sm" style="--av:${(state.usuarios.find(x => x.id === m.uid) || {}).color || '#555'}">${esc(initials(userName(m.uid)))}</span><span><b>${esc(userName(m.uid))}${m.uid === t.asignadoId ? ' <span class="tag info">Responsable</span>' : ''}${m.uid === u.id ? ' <span class="tag">Tú</span>' : ''}</b><small>${esc(fnLabel(m.fn))}${m.fecha ? ' · ' + fmtDT(m.fecha) : ''}</small></span><span class="chip-st ${EQ_ST[m.estado][1]}">${EQ_ST[m.estado][0]}</span></div>`).join('')}
+    <p class="list-title" style="margin-top:12px">Avances entre especialistas</p>
+    ${pases.length ? `<ol class="pases">${pases.map(p => `<li class="${p.para === u.id && !p.leido ? 'nuevo' : ''}"><b>${esc(userName(p.de))} ${ic('arrowR', 12)} ${esc(userName(p.para))}</b><time>${fmtDT(p.fecha)}</time>${p.tipo === 'obs' ? '<span class="chip-st st-obs">Observaciones</span>' : ''}<p>${esc(p.msg)}</p>${p.anexoId ? `<button type="button" class="btn btn-sm btn-ghost" data-ver="${p.anexoId}">${ic('pdf', 14)}Ver adjunto</button>` : ''}</li>`).join('')}</ol>` : '<p class="small">Aún no hay avances enviados.</p>'}
+  </div></details>`;
+}
+
+/* Acciones del equipo */
+function accionesEquipo(t, u) {
+  const a = [];
+  if (!EQ_ACTIVO.includes(t.estado) || rutaOf(t) !== 'contratacion') return a;
+  if (enEquipo(u, t)) {
+    a.push({ k: 'pase', label: 'Enviar avance a un especialista', ic: 'send' });
+    if (miParte(u, t)) a.push({ k: 'conformidad', label: 'Dar conformidad a mi parte', ic: 'check' });
+  }
+  if (u.rol === 'jefe') a.push({ k: 'equipo', label: 'Editar equipo de especialistas', ic: 'users' });
+  return a;
+}
+async function runEquipo(k, t) {
+  const u = me();
+  if (k === 'equipo') {
+    const r = await equipoModal(t, { titulo: `Equipo de especialistas · ${t.codigo}`, boton: 'Guardar equipo', nota: '' });
+    if (!r) return true;
+    aplicarEquipo(t, r);
+    addHist(t, 'Equipo de especialistas actualizado', [equipoTexto(t), r.nota].filter(Boolean).join(' · '));
+    await saveTramite(t); toast('Equipo actualizado'); return true;
+  }
+  if (k === 'pase') {
+    const eq = equipoDe(t).filter(m => m.uid !== u.id), otros = especialistas().filter(x => x.id !== u.id && !eq.some(m => m.uid === x.id));
+    const r = await modal({ title: `Enviar avance · ${t.codigo}`, cls: 'wide', html: `<form class="form-grid">
+        <label class="field full"><span>Para <em>*</em></span><select name="para"><option value="">Selecciona…</option>
+          ${eq.length ? `<optgroup label="Equipo del requerimiento">${eq.map(m => `<option value="${m.uid}">${esc(userName(m.uid))} — ${esc(fnLabel(m.fn))}</option>`).join('')}</optgroup>` : ''}
+          ${otros.length ? `<optgroup label="Otros especialistas (se suman al equipo)">${otros.map(x => `<option value="${x.id}">${esc(x.nombre)} — ${esc(x.cargo)}</option>`).join('')}</optgroup>` : ''}</select></label>
+        <div class="seg two full"><label class="seg-op"><input type="radio" name="tipo" value="avance" checked><span>${ic('send')}<span>Avance<small>Envío mi parte o pido su revisión</small></span></span></label>
+          <label class="seg-op"><input type="radio" name="tipo" value="obs"><span>${ic('alert')}<span>Observaciones<small>Algo debe corregirse</small></span></span></label></div>
+        <label class="field full"><span>Mensaje <em>*</em></span><textarea class="plain" name="msg" rows="4" placeholder="Ej.: Adjunto la indagación de mercado con 3 cotizaciones. Valor estimado S/ 18 450,00. Favor revisar para definir la estrategia."></textarea></label>
+        <div class="field full"><span>Adjunto (opcional)</span><input type="file" class="fcam" accept="image/*" hidden><label class="drop" style="padding:12px"><input type="file" class="fin" accept="image/*,application/pdf,.pdf" multiple hidden>${ic('upload', 20)}<b>Adjunta un PDF o fotos</b><span>Por ejemplo: cuadro comparativo, cotizaciones o informe.</span></label><div class="filelist main-list"></div></div></form>`,
+      buttons: [{ label: 'Cancelar', value: null }, { label: `${ic('send', 16)}Enviar`, cls: 'btn-primary', value: d => {
+        const f = Object.fromEntries(new FormData($('form', d)));
+        if (!f.para) { toast('Elige a quién envías el avance', 'warn'); return KEEP; }
+        if (!String(f.msg).trim()) { toast('Escribe el mensaje', 'warn'); return KEEP; }
+        return { para: f.para, tipo: f.tipo, msg: String(f.msg).trim(), files: d._files.slice() };
+      } }],
+      onOpen: d => wireFiles(d) });
+    if (!r) return true;
+    let anexoId = null;
+    if (r.files.length) {
+      const b = await filesToPdf(r.files, `Avance ${t.codigo}`); if (!b) return true;
+      anexoId = uid();
+      (t.anexos = t.anexos || []).push({ id: anexoId, tipo: 'AVANCE', interno: true, nombre: `Avance de ${nomCorto(u.nombre)} para ${nomCorto(userName(r.para))}`, blob: new Blob([b], { type: 'application/pdf' }), hash: await sha256(b), folios: await pdfPageCount(b) || 0, fecha: new Date().toISOString() });
+    }
+    if (!equipoDe(t).some(m => m.uid === r.para)) { t.equipo = equipoDe(t).concat([{ uid: r.para, fn: '', estado: 'pendiente' }]); addHist(t, `${userName(r.para)} se sumó al equipo de especialistas`, ''); }
+    if (r.tipo === 'obs') { const yo = (t.equipo || []).find(x => x.uid === u.id); if (yo) { yo.estado = 'observado'; yo.fecha = new Date().toISOString(); } }
+    (t.pases = t.pases || []).push({ id: uid(), de: u.id, para: r.para, tipo: r.tipo, msg: r.msg, anexoId, fecha: new Date().toISOString(), leido: null });
+    t.actualizado = new Date().toISOString();
+    await saveTramite(t); toast(`Avance enviado a ${userName(r.para)}`); return true;
+  }
+  if (k === 'conformidad') {
+    const yo = miParte(u, t); if (!yo) return true;
+    const rc = await modal({ title: 'Dar conformidad a mi parte', html: `<form><p class="small" style="margin:0 0 10px">${esc(fnLabel(yo.fn) || 'Mi parte')} · ${esc(t.codigo)}</p><label class="field">Comentario breve (opcional)<textarea class="plain" rows="3" id="dlgTA" placeholder="Ej.: Indagación concluida, valor estimado S/ 18 450,00."></textarea></label></form>`,
+      buttons: [{ label: 'Cancelar', value: null }, { label: `${ic('check', 16)}Dar conformidad`, cls: 'btn-primary', value: d => ({ nota: $('#dlgTA', d).value.trim() }) }] });
+    if (!rc) return true;
+    const nota = rc.nota;
+    yo.estado = 'conforme'; yo.fecha = new Date().toISOString(); yo.nota = nota || '';
+    addHist(t, `Conformidad del equipo: ${yo.fn ? fnLabel(yo.fn) : 'apoyo'}`, [nomCorto(u.nombre), nota].filter(Boolean).join(' · '));
+    const falta = equipoDe(t).filter(m => m.estado !== 'conforme');
+    if (!falta.length && t.asignadoId !== u.id) (t.pases = t.pases || []).push({ id: uid(), de: u.id, para: t.asignadoId, tipo: 'avance', msg: 'Todo el equipo dio su conformidad. Puedes continuar con el trámite.', anexoId: null, fecha: new Date().toISOString(), leido: null });
+    await saveTramite(t); toast(falta.length ? `Conformidad registrada · faltan ${falta.length}` : 'Conformidad registrada · el equipo completó la revisión'); return true;
+  }
+  return false;
+}
+async function marcarPasesLeidos(t, u) {
+  const ps = pasesPara(u, t); if (!ps.length) return false;
+  const now = new Date().toISOString(); ps.forEach(p => p.leido = now);
+  await DB.put('tramites', t); updateBadge(); return true;
+}
+
 function detailSections(t, u) {
   const ru = rutaOf(t), r = t.req || {}, c = t.conf || {}, out = [];
   if (ru === 'contratacion' && t.req) out.push(`<details class="dsec"><summary>${ic('list', 16)}Requerimiento</summary><div class="dsec-b"><dl class="dl">
@@ -3725,10 +3920,12 @@ function detailSections(t, u) {
       <dt>Proveedor</dt><dd>${esc(c.proveedor || '—')}${c.ruc ? '<br>RUC ' + esc(c.ruc) : ''}</dd>${c.monto ? `<dt>Monto</dt><dd>${fmtSoles(c.monto)}</dd>` : ''}
       <dt>Requerimiento</dt><dd>${par ? `<button type="button" class="linkbtn" data-open-t="${par.id}">${esc(par.codigo)}</button>` : 'Sin vincular'}</dd>
       ${t.pago ? `<dt>Pago</dt><dd>${fmtYmd(t.pago.fecha)}${t.pago.siaf ? ' · SIAF ' + esc(t.pago.siaf) : ''}</dd>` : ''}</dl></div></details>`); }
-  if ((t.anexos || []).length) out.push(`<details class="dsec" open><summary>${ic('layers', 16)}Documentos <span class="tag info">${t.anexos.length + 1}</span></summary><div class="dsec-b">
+  const anxV = (t.anexos || []).filter(a => !(a.interno && u.rol === 'area'));
+  if (anxV.length) out.push(`<details class="dsec" open><summary>${ic('layers', 16)}Documentos <span class="tag info">${anxV.length + 1}</span></summary><div class="dsec-b">
       <div class="anx"><span><b>Documento principal</b> · ${t.folios} ${t.folios === 1 ? 'folio' : 'folios'}</span><button type="button" class="btn btn-sm btn-primary" data-ver="main">Ver</button></div>
-      ${t.anexos.map(a => `<div class="anx"><span><b>${esc(a.nombre)}</b> · ${a.folios || '?'} ${a.folios === 1 ? 'folio' : 'folios'}</span><button type="button" class="btn btn-sm btn-ghost" data-ver="${a.id}">Ver</button></div>`).join('')}</div></details>`);
+      ${anxV.map(a => `<div class="anx"><span><b>${esc(a.nombre)}</b> · ${a.folios || '?'} ${a.folios === 1 ? 'folio' : 'folios'}</span><button type="button" class="btn btn-sm btn-ghost" data-ver="${a.id}">Ver</button></div>`).join('')}</div></details>`);
   if (t.checklist) { const ok = t.checklist.items.filter(x => x.ok).length; out.push(`<details class="dsec"><summary>${ic('list', 16)}Verificación de Secretaría <span class="tag ${t.checklist.resultado === 'conforme' ? 'info' : ''}">${ok}/${t.checklist.items.length}</span></summary><div class="dsec-b"><div class="chk-prev" style="border:0;padding:0"><ul>${t.checklist.items.map(x => `<li class="${x.ok ? 'ok' : ''}">${ic(x.ok ? 'check' : 'alert', 14)}<span>${esc(x.l)}</span></li>`).join('')}</ul></div><p class="small">${esc(t.checklist.por)} · ${fmtDT(t.checklist.fecha)}</p></div></details>`); }
+  out.push(equipoHtml(t, u));
   out.push(typeof expedienteHtml === 'function' ? expedienteHtml(t, u) : '');
   out.push(typeof gestionDocHtml === 'function' ? gestionDocHtml(t, u) : '');
   return out.join('');
@@ -3749,6 +3946,7 @@ const askDerivar = () => modal({ title: 'Derivar al Jefe de la Unidad',
   buttons: [{ label: 'Más tarde', value: null }, { label: `${ic('send', 16)}Derivar`, cls: 'btn-primary', value: d => $('#dlgTA', d).value.trim() }] });
 async function runAction(k, t) {
   const bytesOf = async () => new Uint8Array(await t.pdf.arrayBuffer());
+  if (await runEquipo(k, t)) return;
   if (k === 'archivo') { state.currentFolder = t.archivoCarpeta; $('#buscar').value = ''; go('carpetas'); return false; }
   if (k === 'recibir') {
     const chk = await checklistModal(t);
@@ -3793,6 +3991,8 @@ async function runAction(k, t) {
       await saveTramite(t); toast('Pago registrado y trámite concluido'); return;
     }
     if (ru === 'contratacion') {
+      const sinConf = equipoDe(t).filter(m => m.estado !== 'conforme' && m.uid !== t.asignadoId);
+      if (t.equipo && sinConf.length && !(await confirmBox('Faltan conformidades del equipo', `Aún no dan su conformidad: ${sinConf.map(m => `${userName(m.uid)} (${fnLabel(m.fn)})`).join(', ')}. ¿Concluir el trámite de todos modos?`, 'Concluir'))) return;
       const falt = EXP_STAGES.filter(([k2]) => !((t.exp || {})[k2] || {}).done).map(([, n]) => n);
       if (falt.length && !(await confirmBox('Faltan etapas del expediente', `${falt.length === 1 ? 'Aún no se completó 1 etapa' : `Aún no se completaron ${falt.length} etapas`}: ${falt.join(', ')}. ¿Concluir el trámite de todos modos?`, 'Concluir'))) return;
     }
@@ -3812,10 +4012,13 @@ async function runAction(k, t) {
     t.estado = 'observado'; addHist(t, 'Observado y devuelto al área usuaria', motivo); await saveTramite(t); toast('Devuelto al área usuaria'); return;
   }
   if (k === 'derivarJefe') {
-    const r = await askResponsable('Derivar requerimiento', t.asignadoId || (staffAbast().find(x => x.rol === 'especialista') || staffAbast()[0] || {}).id, 'Revisado. Proceder conforme a la normativa vigente.', 'Derivar');
+    const r = rutaOf(t) === 'contratacion'
+      ? await equipoModal(t, { titulo: `Derivar requerimiento · ${t.codigo}`, boton: 'Derivar', nota: 'Revisado. Proceder conforme a la normativa vigente.' })
+      : await askResponsable('Derivar requerimiento', t.asignadoId || (staffAbast().find(x => x.rol === 'especialista') || staffAbast()[0] || {}).id, 'Revisado. Proceder conforme a la normativa vigente.', 'Derivar');
     if (!r) return;
-    t.estado = 'aprobado'; t.asignadoId = r.resp; t.revision = { fecha: new Date().toISOString(), por: me().nombre };
-    addHist(t, `Revisado y derivado por Jefatura a ${userName(r.resp)}`, r.nota);
+    if (r.equipo) aplicarEquipo(t, r); else t.asignadoId = r.resp;
+    t.estado = 'aprobado'; t.revision = { fecha: new Date().toISOString(), por: me().nombre };
+    addHist(t, `Revisado y derivado por Jefatura a ${userName(t.asignadoId)}`, [t.equipo && t.equipo.length > 1 ? `Equipo: ${equipoTexto(t)}.` : '', r.nota].filter(Boolean).join(' '));
     await saveTramite(t); toast(`Derivado a ${userName(r.resp)}`); return;
   }
   if (k === 'iniciar') {
@@ -4305,9 +4508,10 @@ $('#buscar').addEventListener('input', () => { clearTimeout(searchT); searchT = 
    ===================================================================== */
 window.addEventListener('beforeunload', e => { if (state.pages.length) { e.preventDefault(); e.returnValue = ''; } });
 async function migrateData() {
-  if (state.usuarios.some(u => DEMO_MAILS.slice(0, 4).includes(u.correo)) && !state.usuarios.some(u => u.rol === 'especialista')) {
+  if (state.usuarios.some(u => DEMO_MAILS.slice(0, 4).includes(u.correo))) {
     for (const b of ESPECIALISTAS_DEMO) {
-      if (state.usuarios.some(u => u.correo === b.correo)) continue;
+      const ya = state.usuarios.find(u => u.correo === b.correo);
+      if (ya) { if (!ya.funciones) { ya.funciones = b.funciones; try { await DB.put('usuarios', ya); } catch (e) {} } continue; }
       const u = { id: uid(), ...b, firma: null, selloAreaImg: null, postFirmaImg: null, activo: true };
       await setPassword(u, DEMO_PASS); try { await DB.put('usuarios', u); } catch (e) {} state.usuarios.push(u);
     }
