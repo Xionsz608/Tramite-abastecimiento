@@ -693,6 +693,17 @@ table.rtbl{border-collapse:collapse;width:100%;font-size:13px;min-width:1000px}
 .rtbl .linkbtn{text-align:left;padding:0;font-size:13px}
 
 /* ---------- Requerimiento, verificación, plazos y expediente ---------- */
+.pasos{list-style:none;margin:10px 0 14px;padding:0;display:flex;gap:4px}
+.pasos li{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);position:relative}
+.pasos li::before{content:'';position:absolute;top:11px;left:-50%;right:50%;height:2px;background:var(--line,#d9dee5);z-index:0}
+.pasos li:first-child::before{display:none}
+.pasos li i{position:relative;z-index:1;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;background:var(--surface-2);border:2px solid var(--line,#d9dee5);color:var(--muted)}
+.pasos li.ok i{background:var(--primary);border-color:var(--primary);color:#fff}
+.pasos li.ok::before,.pasos li.cur::before,.pasos li.obs::before{background:var(--primary)}
+.pasos li.cur i{border-color:var(--primary);color:var(--primary);background:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 18%,transparent)}
+.pasos li.cur{color:var(--text,#16202b)}
+.pasos li.obs i{border-color:var(--danger);color:var(--danger);background:#fff}
+.pasos li.obs{color:var(--danger)}
 .rgroup{grid-column:1/-1;margin:6px 0 -2px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .rsec{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px;border:1px solid var(--border);border-radius:14px;padding:14px;background:color-mix(in srgb,var(--primary) 3%,var(--surface))}
 .rsec>h4{grid-column:1/-1;margin:0;font-size:14px;display:flex;gap:8px;align-items:center}
@@ -794,7 +805,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation-duration:.01ms!impo
     </div>
     <p class="lg-pick">Elige tu portal</p>
     <div class="lg-portals" role="group" aria-label="Elegir portal">
-      <button type="button" class="lg-portal" data-p="area" aria-pressed="true"><span class="av"><i data-ic="send" data-size="18"></i></span><span class="lg-txt"><b>Portal de áreas usuarias</b><span>Envía requerimientos con tu firma y sello, y sigue en qué paso están.</span></span><span class="lg-check"><i data-ic="check" data-size="16"></i></span></button>
+      <button type="button" class="lg-portal" data-p="area" aria-pressed="true"><span class="av"><i data-ic="send" data-size="18"></i></span><span class="lg-txt"><b>Portal de áreas usuarias</b><span>Envía tus requerimientos y sigue en qué paso están.</span></span><span class="lg-check"><i data-ic="check" data-size="16"></i></span></button>
       <button type="button" class="lg-portal" data-p="abast" aria-pressed="false"><span class="av"><i data-ic="stamp" data-size="18"></i></span><span class="lg-txt"><b>Portal de Abastecimiento</b><span>Secretaría recibe y deriva; Jefatura revisa y asigna; especialistas ejecutan.</span></span><span class="lg-check"><i data-ic="check" data-size="16"></i></span></button>
     </div>
     <p class="lg-foot" id="storageNote"><i data-ic="shield" data-size="16"></i><span>Prototipo de prueba: las cuentas y los documentos se guardan en este navegador. En la versión con servidor local, el acceso se validará en el servidor.</span></p>
@@ -1034,7 +1045,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation-duration:.01ms!impo
   <div class="wrap" id="usersWrap"></div>
 </section>
 
-<!-- ============ PERFIL: FIRMAS Y SELLOS ============ -->
+<!-- ============ MI PERFIL ============ -->
 <section id="view-perfil" class="view" hidden>
   <div class="wrap" id="perfilWrap"></div>
 </section>
@@ -1215,21 +1226,12 @@ const ESTADOS = {
   enviado: { label: 'Por recibir', cls: 'st-env' },
   recibido: { label: 'Recibido en Secretaría', cls: 'st-rec' },
   derivado: { label: 'En revisión de Jefatura', cls: 'st-der' },
-  aprobado: { label: 'Conforme · por derivar', cls: 'st-rec' },
+  aprobado: { label: 'Derivado', cls: 'st-rec' },
   ejecucion: { label: 'En ejecución', cls: 'st-eje' },
   revisado: { label: 'Concluido', cls: 'st-ok' },
   observado: { label: 'Observado', cls: 'st-obs' }
 };
 const SEAL_COLORS = [['#1d3fa8', 'Azul'], ['#a3201a', 'Rojo'], ['#5b2a86', 'Morado'], ['#1e6b3a', 'Verde'], ['#222222', 'Negro']];
-const STAMP_KINDS = {
-  firma: { label: 'Mi firma', ic: 'sign', w: 0.26 },
-  selloArea: { label: 'Sello de área', ic: 'stamp', w: 0.18 },
-  postfirma: { label: 'Sello post-firma', ic: 'stamp', w: 0.30 },
-  recepcion: { label: 'Sello de recepción', ic: 'inbox', w: 0.36 },
-  revision: { label: 'Sello de revisión', ic: 'check', w: 0.30 },
-  vobo: { label: 'Visto bueno (V°B°)', ic: 'check', w: 0.15 },
-  texto: { label: 'Proveído o nota', ic: 'text', w: 0.42 }
-};
 const tipoInfo = v => TIPOS_REQ.find(t => t.v === v) || { v, ic: 'file', ruta: rutaDe(v) };
 const me = () => state.usuarios.find(u => u.id === state.userId) || state.usuarios[0];
 let currentView = 'inicio';
@@ -1403,392 +1405,6 @@ async function buildPdf(pages, meta = {}) {
 async function pdfPageCount(bytes) { try { return (await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true })).getPageCount(); } catch (e) { return 0; } }
 
 /* =====================================================================
-   Generación de sellos (canvas → PNG transparente)
-   ===================================================================== */
-const FONT = 'Arial, Helvetica, sans-serif';
-function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d', { willReadFrequently: true })]; }
-const outImg = c => ({ src: c.toDataURL('image/png'), aspect: c.height / c.width });
-function setFont(ctx, size, weight = 'bold') { ctx.font = `${weight} ${size}px ${FONT}`; }
-function fitFont(ctx, text, maxW, size, weight = 'bold', min = 10) { let s = size; for (; s > min; s--) { setFont(ctx, s, weight); if (ctx.measureText(text).width <= maxW) break; } setFont(ctx, s, weight); return s; }
-function wrapLines(ctx, text, maxW) {
-  const out = [];
-  String(text).split('\n').forEach(par => {
-    const words = par.split(/\s+/).filter(Boolean); let cur = '';
-    words.forEach(w => { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width <= maxW || !cur) cur = t; else { out.push(cur); cur = w; } });
-    out.push(cur);
-  });
-  return out;
-}
-function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
-function arcText(ctx, text, cx, cy, r, center, bottom, spacing = 0) {
-  const chars = [...text]; const ws = chars.map(ch => ctx.measureText(ch).width + spacing);
-  const total = ws.reduce((a, b) => a + b, 0);
-  let a = bottom ? center + total / r / 2 : center - total / r / 2;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  chars.forEach((ch, i) => {
-    const half = ws[i] / 2 / r;
-    a += bottom ? -half : half;
-    ctx.save(); ctx.translate(cx + r * Math.cos(a), cy + r * Math.sin(a)); ctx.rotate(bottom ? a - Math.PI / 2 : a + Math.PI / 2); ctx.fillText(ch, 0, 0); ctx.restore();
-    a += bottom ? -half : half;
-  });
-}
-function fitArc(ctx, text, r, maxAngle, size, spacing) {
-  let s = size;
-  for (; s > 12; s--) { setFont(ctx, s); const total = [...text].reduce((t, ch) => t + ctx.measureText(ch).width + spacing, 0); if (total / r <= maxAngle) break; }
-  setFont(ctx, s); return s;
-}
-function genCircleSeal({ top, center, bottom, color, big }) {
-  const S = 520, c = S / 2; const [cv, ctx] = mkCanvas(S, S);
-  ctx.strokeStyle = ctx.fillStyle = color;
-  ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(c, c, c - 10, 0, Math.PI * 2); ctx.stroke();
-  ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(c, c, c - 24, 0, Math.PI * 2); ctx.stroke();
-  ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(c, c, c - 88, 0, Math.PI * 2); ctx.stroke();
-  const rt = c - 56;
-  const T = String(top || '').toUpperCase().trim(), B = String(bottom || '').toUpperCase().trim();
-  if (T) { fitArc(ctx, T, rt, Math.PI * (B ? 0.92 : 1.5), 38, 3); arcText(ctx, T, c, c, rt, -Math.PI / 2, false, 3); }
-  if (B) { fitArc(ctx, B, rt, Math.PI * 0.62, 32, 3); arcText(ctx, B, c, c, rt, Math.PI / 2, true, 3); }
-  if (B) { setFont(ctx, 26); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; [Math.PI * 0.02, Math.PI * 0.98].forEach(a => ctx.fillText('★', c + rt * Math.cos(a), c + rt * Math.sin(a))); }
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const inner = (c - 100) * 2 * 0.9;
-  if (big) {
-    fitFont(ctx, center, inner, 104);
-    ctx.fillText(center, c, c + 4);
-  } else {
-    const txt = String(center || '').toUpperCase();
-    let s = 42, lines = [txt];
-    for (; s > 14; s--) { setFont(ctx, s); lines = wrapLines(ctx, txt, inner * 0.92); if (lines.length <= 3 && lines.every(l => ctx.measureText(l).width <= inner)) break; }
-    const lh = s * 1.15, y0 = c - (lines.length - 1) * lh / 2;
-    lines.forEach((l, i) => ctx.fillText(l, c, y0 + i * lh));
-    ctx.lineWidth = 2;
-    const ly = y0 - lh * 0.85, ly2 = y0 + (lines.length - 1) * lh + lh * 0.85;
-    [ly, ly2].forEach(y => { ctx.beginPath(); ctx.moveTo(c - 70, y); ctx.lineTo(c + 70, y); ctx.stroke(); });
-  }
-  return outImg(cv);
-}
-function genPostFirma({ nombre, cargo, extra, color }) {
-  const W = 720, H = 178; const [cv, ctx] = mkCanvas(W, H);
-  const N = String(nombre || '').toUpperCase();
-  ctx.strokeStyle = ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.moveTo(70, 16); ctx.lineTo(W - 70, 16); ctx.stroke(); ctx.setLineDash([]);
-  fitFont(ctx, N, W - 30, 40); ctx.fillText(N, W / 2, 66);
-  fitFont(ctx, cargo || '', W - 30, 30, 'normal'); ctx.fillText(cargo || '', W / 2, 112);
-  if (extra) { fitFont(ctx, extra, W - 30, 25, 'normal'); ctx.fillText(extra, W / 2, 152); }
-  return outImg(cv);
-}
-function genRecepcion({ entidad, unidad, fecha, hora, registro, folios, recibe, color }) {
-  const W = 640, H = 400; const [cv, ctx] = mkCanvas(W, H);
-  const E = String(entidad || '').toUpperCase(), U = String(unidad || '').toUpperCase();
-  ctx.strokeStyle = ctx.fillStyle = color;
-  ctx.lineWidth = 6; rr(ctx, 6, 6, W - 12, H - 12, 22); ctx.stroke();
-  ctx.lineWidth = 2; rr(ctx, 18, 18, W - 36, H - 36, 14); ctx.stroke();
-  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  fitFont(ctx, E, W - 70, 24); ctx.fillText(E, W / 2, 56);
-  fitFont(ctx, U, W - 70, 30); ctx.fillText(U, W / 2, 94);
-  ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(34, 112); ctx.lineTo(W - 34, 112); ctx.stroke();
-  setFont(ctx, 62); if ('letterSpacing' in ctx) ctx.letterSpacing = '8px';
-  ctx.fillText('RECIBIDO', W / 2 + 4, 178);
-  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
-  ctx.beginPath(); ctx.moveTo(34, 200); ctx.lineTo(W - 34, 200); ctx.stroke();
-  ctx.textAlign = 'left';
-  const row = (label, value, x, y, maxW) => { setFont(ctx, 24, 'normal'); ctx.fillText(label, x, y); const lw = ctx.measureText(label + ' ').width; fitFont(ctx, String(value), maxW - lw, 26); ctx.fillText(String(value), x + lw, y); };
-  row('FECHA:', fecha, 40, 246, 300); row('HORA:', hora, 360, 246, 240);
-  row('REG. N.°:', registro, 40, 294, 300); row('FOLIOS:', folios, 360, 294, 240);
-  row('RECIBIDO POR:', recibe, 40, 342, W - 80);
-  return outImg(cv);
-}
-function genRevision({ unidad, fecha, nombre, cargo, color }) {
-  const W = 620, H = 330; const [cv, ctx] = mkCanvas(W, H);
-  const U = String(unidad || '').toUpperCase(), N = String(nombre || '').toUpperCase();
-  ctx.strokeStyle = ctx.fillStyle = color;
-  ctx.lineWidth = 6; rr(ctx, 6, 6, W - 12, H - 12, 16); ctx.stroke();
-  ctx.lineWidth = 2; rr(ctx, 18, 18, W - 36, H - 36, 10); ctx.stroke();
-  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  setFont(ctx, 70); if ('letterSpacing' in ctx) ctx.letterSpacing = '6px';
-  ctx.fillText('REVISADO', W / 2 + 3, 102);
-  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
-  fitFont(ctx, U, W - 70, 26); ctx.fillText(U, W / 2, 148);
-  ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(34, 168); ctx.lineTo(W - 34, 168); ctx.stroke();
-  ctx.textAlign = 'left';
-  setFont(ctx, 24, 'normal'); ctx.fillText('FECHA:', 40, 212); setFont(ctx, 26); ctx.fillText(fecha, 140, 212);
-  setFont(ctx, 24, 'normal'); ctx.fillText('POR:', 40, 256); fitFont(ctx, N, W - 160, 26); ctx.fillText(N, 110, 256);
-  fitFont(ctx, cargo || '', W - 80, 22, 'normal'); ctx.fillText(cargo || '', 40, 294);
-  return outImg(cv);
-}
-function genTexto(text, color) {
-  const W = 820; const [, mx] = mkCanvas(10, 10); setFont(mx, 36, 'italic bold');
-  const lines = wrapLines(mx, text, W - 40);
-  const H = lines.length * 48 + 22; const [cv, ctx] = mkCanvas(W, H);
-  ctx.fillStyle = color; setFont(ctx, 36, 'italic bold'); ctx.textBaseline = 'top';
-  lines.forEach((l, i) => ctx.fillText(l, 20, 10 + i * 48));
-  return outImg(cv);
-}
-function whiteToAlpha(c) {
-  const ctx = c.getContext('2d', { willReadFrequently: true }); const d = ctx.getImageData(0, 0, c.width, c.height), a = d.data;
-  for (let i = 0; i < a.length; i += 4) {
-    const lum = 0.299 * a[i] + 0.587 * a[i + 1] + 0.114 * a[i + 2];
-    a[i + 3] = lum >= 205 ? 0 : Math.min(255, Math.round((205 - lum) / 205 * 255 * 1.8));
-  }
-  ctx.putImageData(d, 0, 0);
-}
-function trimCanvas(c, pad = 10) {
-  const ctx = c.getContext('2d', { willReadFrequently: true }); const { width: w, height: h } = c;
-  const a = ctx.getImageData(0, 0, w, h).data;
-  let x0 = w, y0 = h, x1 = -1, y1 = -1;
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (a[(y * w + x) * 4 + 3] > 12) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-  if (x1 < 0) return null;
-  x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(w - 1, x1 + pad); y1 = Math.min(h - 1, y1 + pad);
-  const [o, ox] = mkCanvas(x1 - x0 + 1, y1 - y0 + 1); ox.drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
-  return o;
-}
-async function imageFileToTransparentPng(file, max = 1200) {
-  const img = await loadImg(file);
-  const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-  const [c, ctx] = mkCanvas(Math.round(img.naturalWidth * s), Math.round(img.naturalHeight * s));
-  ctx.drawImage(img, 0, 0, c.width, c.height);
-  whiteToAlpha(c);
-  const t = trimCanvas(c, 8);
-  return t ? t.toDataURL('image/png') : null;
-}
-
-/* Imagen de cada tipo de sello o firma para el usuario actual */
-function sealPreview(kind, u, data = {}) {
-  const c = state.config, color = u.color || SEAL_COLORS[0][0], now = new Date();
-  switch (kind) {
-    case 'selloArea': return genCircleSeal({ top: c.entidad, center: u.area, bottom: c.ciudad, color });
-    case 'postfirma': return genPostFirma({ nombre: u.nombre, cargo: u.cargo, extra: u.area, color });
-    case 'recepcion': return genRecepcion({ entidad: c.entidad, unidad: c.unidad, fecha: fmtD(now), hora: fmtH(now), registro: data.registro || '0000-' + now.getFullYear(), folios: data.folios ?? '—', recibe: shortName(u.nombre), color });
-    case 'revision': return genRevision({ unidad: c.unidad, fecha: `${fmtD(now)}  ${fmtH(now)}`, nombre: u.nombre, cargo: u.cargo, color });
-    case 'vobo': return genCircleSeal({ top: c.unidad, center: 'V°B°', bottom: shortName(u.nombre), color, big: true });
-  }
-  return null;
-}
-async function stampImage(kind, data = {}) {
-  const u = me();
-  if (kind === 'firma') {
-    let src = u.firma;
-    if (!src) { toast('Primero crea tu firma'); src = await signaturePad(u); if (!src) return null; }
-    return { src, aspect: await imgAspect(src) };
-  }
-  if (kind === 'selloArea' && u.selloAreaImg) return { src: u.selloAreaImg, aspect: await imgAspect(u.selloAreaImg) };
-  if (kind === 'postfirma' && u.postFirmaImg) return { src: u.postFirmaImg, aspect: await imgAspect(u.postFirmaImg) };
-  if (kind === 'texto') {
-    const t = await askTextArea('Proveído o nota', 'Texto que se colocará en el documento', data.textoDefault || '');
-    return t ? genTexto(t, u.color || SEAL_COLORS[0][0]) : null;
-  }
-  return sealPreview(kind, u, data);
-}
-
-/* =====================================================================
-   Pad de firma
-   ===================================================================== */
-function signaturePad(u) {
-  return modal({
-    title: 'Mi firma',
-    html: `<p class="hint">Dibuja tu firma con el mouse, el dedo o un lápiz digital. También puedes subir una foto de tu firma hecha en papel blanco: el fondo se quita solo.</p>
-      <div class="pad"><canvas></canvas><span class="pad-line"></span><span class="pad-ph">Firma aquí</span></div>
-      <div class="row" style="margin-top:12px">
-        <span class="inline-field">Tinta <select class="pad-color"><option value="#14238a">Azul</option><option value="#111111">Negro</option></select></span>
-        <button type="button" class="btn btn-ghost btn-sm pad-clear">Limpiar</button>
-        <label class="btn btn-ghost btn-sm"><input type="file" accept="image/*" class="pad-file" hidden>${ic('upload', 16)}Subir imagen</label>
-      </div>`,
-    buttons: [{ label: 'Cancelar', value: null }, { label: 'Guardar firma', cls: 'btn-primary', value: d => d._getSig() }],
-    onOpen: d => {
-      const box = $('.pad', d), cv = $('canvas', box), ph = $('.pad-ph', box);
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      cv.width = box.clientWidth * dpr; cv.height = box.clientHeight * dpr;
-      const ctx = cv.getContext('2d', { willReadFrequently: true });
-      ctx.lineCap = ctx.lineJoin = 'round';
-      let drawing = false, drawn = false, last = null, lastMid = null, uploaded = null;
-      const pt = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * dpr, y: (e.clientY - r.top) * dpr }; };
-      cv.addEventListener('pointerdown', e => {
-        e.preventDefault();
-        if (uploaded) { uploaded = null; ctx.clearRect(0, 0, cv.width, cv.height); }
-        drawing = true; drawn = true; ph.hidden = true; last = pt(e); lastMid = last;
-        try { cv.setPointerCapture(e.pointerId); } catch (er) {}
-        ctx.strokeStyle = ctx.fillStyle = $('.pad-color', d).value; ctx.lineWidth = 2.8 * dpr;
-        ctx.beginPath(); ctx.arc(last.x, last.y, 1.3 * dpr, 0, Math.PI * 2); ctx.fill();
-      });
-      cv.addEventListener('pointermove', e => {
-        if (!drawing) return;
-        const p = pt(e), mid = { x: (last.x + p.x) / 2, y: (last.y + p.y) / 2 };
-        ctx.beginPath(); ctx.moveTo(lastMid.x, lastMid.y); ctx.quadraticCurveTo(last.x, last.y, mid.x, mid.y); ctx.stroke();
-        lastMid = mid; last = p;
-      });
-      const end = () => { drawing = false; };
-      cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
-      $('.pad-clear', d).onclick = () => { ctx.clearRect(0, 0, cv.width, cv.height); drawn = false; uploaded = null; ph.hidden = false; };
-      $('.pad-file', d).onchange = async e => {
-        const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-        const src = await imageFileToTransparentPng(f).catch(() => null);
-        if (!src) { toast('No se encontró una firma en la imagen', 'warn'); return; }
-        uploaded = src; drawn = true; ph.hidden = true;
-        const im = new Image();
-        im.onload = () => { ctx.clearRect(0, 0, cv.width, cv.height); const s = Math.min(cv.width * 0.9 / im.width, cv.height * 0.8 / im.height); ctx.drawImage(im, (cv.width - im.width * s) / 2, (cv.height - im.height * s) / 2, im.width * s, im.height * s); };
-        im.src = src;
-      };
-      d._getSig = () => {
-        if (uploaded) return uploaded;
-        if (!drawn) { toast('Dibuja tu firma primero', 'warn'); return KEEP; }
-        const t = trimCanvas(cv, 12 * dpr);
-        if (!t) { toast('Dibuja tu firma primero', 'warn'); return KEEP; }
-        return t.toDataURL('image/png');
-      };
-    }
-  }).then(async src => {
-    if (src) { u.firma = src; await DB.put('usuarios', u); toast('Firma guardada'); if (currentView === 'perfil') renderPerfil(); }
-    return src;
-  });
-}
-
-/* =====================================================================
-   Editor para colocar firmas y sellos sobre el PDF
-   ===================================================================== */
-async function applyStamps(bytes, items) {
-  const { PDFDocument, degrees } = PDFLib;
-  const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
-  const cache = {};
-  for (const it of items) {
-    const png = cache[it.src] || (cache[it.src] = await doc.embedPng(dataUrlBytes(it.src)));
-    const page = doc.getPage(it.page - 1);
-    const box = page.getCropBox();
-    const rot = (((page.getRotation().angle || 0) % 360) + 360) % 360;
-    const W = box.width, H = box.height;
-    const Wv = rot % 180 ? H : W, Hv = rot % 180 ? W : H;
-    const w = it.fw * Wv, h = w * it.aspect;
-    const u = it.fx * Wv, v = it.fy * Hv + h;
-    let x, y;
-    if (rot === 90) { x = v; y = u; }
-    else if (rot === 180) { x = W - u; y = v; }
-    else if (rot === 270) { x = W - v; y = H - u; }
-    else { x = u; y = H - v; }
-    page.drawImage(png, { x: x + box.x, y: y + box.y, width: w, height: h, rotate: degrees(rot), opacity: it.kind === 'firma' ? 1 : 0.92 });
-  }
-  return await doc.save();
-}
-async function openStamper({ bytes, title, tools, required = [], auto = [], data = {}, startPage = 'first', note = '' }) {
-  if (typeof pdfjsLib === 'undefined' || typeof PDFLib === 'undefined') { toast('No se cargaron los módulos de PDF. Revisa tu conexión a internet.', 'err'); return null; }
-  let pdf;
-  try { pdf = await pdfjsLib.getDocument({ data: bytes.slice() }).promise; }
-  catch (e) { console.error(e); toast('No se pudo abrir el PDF', 'err'); return null; }
-  const items = []; let cur = startPage === 'last' ? pdf.numPages : 1, sel = null, task = null;
-  const html = `<div class="stp">
-      <div class="stp-tools">
-        <p class="list-title">Agregar al documento</p>
-        ${tools.map(k => `<button type="button" class="tool" data-k="${k}">${ic(STAMP_KINDS[k].ic)}<span>${STAMP_KINDS[k].label}${required.includes(k) ? ' <em>*</em>' : ''}</span><b class="cnt" hidden></b></button>`).join('')}
-        <p class="stp-help">Toca un elemento para agregarlo a la página. Arrástralo para moverlo y usa la esquina azul para cambiar su tamaño.${required.length ? ' <em>*</em> Obligatorio.' : ''}</p>
-      </div>
-      <div class="stp-main">
-        <div class="stp-bar"><button type="button" class="btn btn-icon" data-nav="-1" aria-label="Página anterior">${ic('chevL')}</button><span class="pg"></span><button type="button" class="btn btn-icon" data-nav="1" aria-label="Página siguiente">${ic('chevR')}</button></div>
-        <div class="stp-wrap"><div class="stage"><canvas></canvas></div></div>
-      </div>
-    </div>
-    <p class="stp-legal">${ic('shield', 16)}<span>Firma y sellos gráficos; el historial registra fecha, hora y responsable${note ? '. ' + esc(note) : ''}.</span></p>`;
-  return await modal({
-    title, html, cls: 'full',
-    buttons: [
-      { label: 'Cancelar', value: null },
-      { label: `${ic('check')}Aplicar al documento`, cls: 'btn-primary', value: async () => {
-        const miss = required.filter(k => !items.some(i => i.kind === k));
-        if (miss.length) { toast('Falta colocar: ' + miss.map(k => STAMP_KINDS[k].label.toLowerCase()).join(', '), 'warn'); return KEEP; }
-        if (!items.length) return { bytes, kinds: [] };
-        const stop = busy('Aplicando firmas y sellos…');
-        try { return { bytes: await applyStamps(bytes, items), kinds: [...new Set(items.map(i => i.kind))] }; }
-        catch (e) { console.error(e); toast('No se pudo aplicar al documento', 'err'); return KEEP; }
-        finally { stop(); }
-      } }
-    ],
-    onOpen: d => {
-      const stage = $('.stage', d), canvas = $('canvas', stage), wrap = $('.stp-wrap', d), pg = $('.pg', d);
-      const prev = $('[data-nav="-1"]', d), next = $('[data-nav="1"]', d);
-      const ratio = () => stage.clientWidth / Math.max(1, stage.clientHeight);
-      function drawItems() {
-        $$('.it', stage).forEach(e => e.remove());
-        items.filter(i => i.page === cur).forEach(i => {
-          const el = document.createElement('div');
-          el.className = 'it' + (i === sel ? ' sel' : ''); el.dataset.id = i.id;
-          el.style.left = i.fx * 100 + '%'; el.style.top = i.fy * 100 + '%'; el.style.width = i.fw * 100 + '%';
-          el.innerHTML = `<img src="${i.src}" alt="${esc(STAMP_KINDS[i.kind].label)}" draggable="false"><button type="button" class="it-del" aria-label="Quitar">×</button><span class="it-h"></span>`;
-          stage.appendChild(el);
-        });
-        $$('.tool', d).forEach(b => { const n = items.filter(i => i.kind === b.dataset.k).length; const c = $('.cnt', b); c.hidden = !n; c.textContent = n; b.classList.toggle('done', n > 0); });
-      }
-      async function render() {
-        const page = await pdf.getPage(cur);
-        const vp1 = page.getViewport({ scale: 1 });
-        const cssW = Math.max(220, Math.min(wrap.clientWidth - 28, 900));
-        const s = cssW / vp1.width, dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const vp = page.getViewport({ scale: s * dpr });
-        if (task) { try { task.cancel(); } catch (e) {} }
-        canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
-        const cssH = vp1.height * s;
-        canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
-        stage.style.width = cssW + 'px'; stage.style.height = cssH + 'px';
-        pg.textContent = `Página ${cur} de ${pdf.numPages}`;
-        prev.disabled = cur <= 1; next.disabled = cur >= pdf.numPages;
-        drawItems();
-        task = page.render({ canvasContext: canvas.getContext('2d'), viewport: vp });
-        try { await task.promise; } catch (e) {}
-      }
-      function addItem(kind, img, pos = {}) {
-        const fw = STAMP_KINDS[kind].w, hf = fw * img.aspect * ratio();
-        const it = { id: uid(), kind, page: cur, fw, aspect: img.aspect, src: img.src,
-          fx: clamp(pos.fx ?? (1 - fw) / 2, 0, 1 - fw), fy: clamp(pos.fy ?? 0.42, 0, Math.max(0, 1 - hf)) };
-        items.push(it); sel = it; drawItems();
-      }
-      prev.onclick = () => { if (cur > 1) { cur--; sel = null; render(); } };
-      next.onclick = () => { if (cur < pdf.numPages) { cur++; sel = null; render(); } };
-      $('.stp-tools', d).addEventListener('click', async e => {
-        const b = e.target.closest('.tool'); if (!b) return;
-        const img = await stampImage(b.dataset.k, data); if (!img) return;
-        addItem(b.dataset.k, img);
-      });
-      stage.addEventListener('pointerdown', e => {
-        const el = e.target.closest('.it');
-        if (!el) { if (sel) { sel = null; drawItems(); } return; }
-        const it = items.find(i => i.id === el.dataset.id); if (!it) return;
-        if (e.target.closest('.it-del')) { items.splice(items.indexOf(it), 1); sel = null; drawItems(); return; }
-        e.preventDefault();
-        const mode = e.target.classList.contains('it-h') ? 'size' : 'move';
-        if (sel !== it) { sel = it; drawItems(); }
-        const node = $(`.it[data-id="${it.id}"]`, stage);
-        const r = stage.getBoundingClientRect(), k = r.width / r.height;
-        const sx = e.clientX, sy = e.clientY, f0 = { fx: it.fx, fy: it.fy, fw: it.fw };
-        const mv = ev => {
-          const dx = (ev.clientX - sx) / r.width, dy = (ev.clientY - sy) / r.height;
-          if (mode === 'move') { it.fx = clamp(f0.fx + dx, 0, 1 - it.fw); it.fy = clamp(f0.fy + dy, 0, Math.max(0, 1 - it.fw * it.aspect * k)); }
-          else { it.fw = clamp(f0.fw + dx, 0.04, Math.min(1 - it.fx, (1 - it.fy) / (it.aspect * k))); }
-          node.style.left = it.fx * 100 + '%'; node.style.top = it.fy * 100 + '%'; node.style.width = it.fw * 100 + '%';
-        };
-        const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
-        window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
-      });
-      d.addEventListener('keydown', e => {
-        if (!sel || e.target.matches('input,textarea,select')) return;
-        const step = e.shiftKey ? 0.02 : 0.004, k = ratio();
-        if (e.key === 'Delete' || e.key === 'Backspace') { items.splice(items.indexOf(sel), 1); sel = null; drawItems(); e.preventDefault(); return; }
-        const mv = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
-        if (!mv) return;
-        e.preventDefault();
-        sel.fx = clamp(sel.fx + mv[0], 0, 1 - sel.fw); sel.fy = clamp(sel.fy + mv[1], 0, Math.max(0, 1 - sel.fw * sel.aspect * k));
-        drawItems();
-      });
-      let rt; const onResize = () => { clearTimeout(rt); rt = setTimeout(render, 150); };
-      window.addEventListener('resize', onResize);
-      d._onClose.push(() => { window.removeEventListener('resize', onResize); try { pdf.destroy(); } catch (e) {} });
-      (async () => {
-        await render();
-        for (const a of auto) {
-          const img = await stampImage(a.kind, data); if (!img) continue;
-          const fw = STAMP_KINDS[a.kind].w;
-          addItem(a.kind, img, { fx: a.fx ?? 1 - fw - 0.04, fy: a.fy ?? 0.03 });
-        }
-        sel = null; drawItems();
-      })();
-    }
-  });
-}
-
-/* =====================================================================
    Visor de PDF
    ===================================================================== */
 function openBlob(blob) {
@@ -1876,7 +1492,7 @@ const ROLE_VIEWS = {
   especialista: ['inicio', 'tramites', 'documentos', 'reportes', 'carpetas', 'perfil']
 };
 const NAVS = {
-  area: [['inicio', 'Inicio', 'home'], ['tramites', 'Mis trámites', 'inbox'], ['documentos', 'Recibidos', 'mail'], ['perfil', 'Firmas y sellos', 'sign']],
+  area: [['inicio', 'Inicio', 'home'], ['tramites', 'Mis trámites', 'inbox'], ['documentos', 'Recibidos', 'mail'], ['perfil', 'Mi perfil', 'user']],
   abast: [['inicio', 'Panel', 'home'], ['tramites', 'Bandeja', 'inbox'], ['documentos', 'Documentos', 'mail'], ['reportes', 'Reportes', 'chart'], ['carpetas', 'Carpetas', 'folder'], ['usuarios', 'Usuarios', 'users']]
 };
 const uiOf = u => u.rol === 'area' ? 'area' : 'abast';
@@ -2113,7 +1729,7 @@ const SET_RENDER = {
       <p class="set-hint">Es el portal que se abre primero en este equipo.</p></div>
     <div class="set-row"><b>Último perfil en este equipo</b>${l ? `<div class="set-card"><span class="av" style="--av:${ROLES[l.rol] ? ROLES[l.rol].color : '#555'}">${esc(initials(l.nombre))}</span><span class="who"><b>${esc(l.nombre)}</b><small>${esc(roleLabel(l))} · ${esc(l.correo)}</small></span><button type="button" class="btn btn-primary btn-sm" data-act="use-profile">Usar este perfil</button><button type="button" class="btn btn-ghost btn-sm" data-act="forget-profile">Olvidar</button></div>`
       : `<p class="set-hint">${prefs.rememberEmail ? 'Aún no hay un perfil guardado: aparecerá después de tu próximo ingreso.' : 'Activa «Recordar mi correo en este equipo» en Cuentas para guardar tu último perfil.'}</p>`}</div>
-    <p class="set-hint">Tu firma, tus sellos y tus datos personales se editan después de ingresar, en la sección de firmas y sellos.</p></div>`;
+    <p class="set-hint">Tus datos personales se editan después de ingresar, en «Mi perfil».</p></div>`;
   }
 };
 function openSettings(start = 'personal') {
@@ -2205,7 +1821,7 @@ async function userMenu() {
   const u = me();
   const r = await modal({ title: 'Mi cuenta',
     html: `<div class="from-line"><span class="av" style="--av:${ROLES[u.rol].color}">${esc(initials(u.nombre))}</span><div><b>${esc(u.nombre)}</b>${esc(u.cargo)} · ${esc(u.area)}<br>${esc(u.correo)}</div></div><p class="small">Portal: ${uiOf(u) === 'area' ? 'áreas usuarias' : 'Unidad de Abastecimiento'} · ${esc(ROLES[u.rol].label)}</p>`,
-    buttons: [{ label: `${ic('lock', 16)}Cambiar contraseña`, value: 'pass' }, { label: `${ic('sign', 16)}Firmas y sellos`, value: 'perfil' }, { label: 'Cerrar sesión', cls: 'btn-danger', value: 'out' }] });
+    buttons: [{ label: `${ic('lock', 16)}Cambiar contraseña`, value: 'pass' }, { label: `${ic('user', 16)}Mi perfil`, value: 'perfil' }, { label: 'Cerrar sesión', cls: 'btn-danger', value: 'out' }] });
   if (r === 'pass') changePassword(u);
   if (r === 'perfil') go('perfil');
   if (r === 'out') logout();
@@ -2270,7 +1886,6 @@ function homeArea(u) {
   const nuTab = (tabsFor('area').find(([k, , f]) => k !== 'all' && list.filter(f).some(t => unreadOf(t).length)) || ['curso'])[0];
   const recent = list.slice().sort((a, b) => b.actualizado.localeCompare(a.actualizado)).slice(0, 5);
   return `<div class="home-hero"><div><p class="eyebrow">${esc(u.area)}</p><h1>${greet()}, ${esc(u.nombre.split(' ')[0])}</h1><p>Envía tus requerimientos a la ${esc(titleCase(state.config.unidad))} y revisa en qué paso están.</p></div><button type="button" class="btn btn-primary btn-lg" data-new="">${ic('plus')}Nuevo requerimiento</button></div>
-    ${!u.firma ? `<div class="callout">${ic('sign', 20)}<span>Aún no tienes tu firma guardada. Créala una vez y úsala en todos tus requerimientos.</span><button type="button" class="btn btn-sm btn-primary" data-go="perfil">Crear mi firma</button></div>` : ''}
     ${nd ? `<div class="callout">${ic('mail', 20)}<span>La Unidad te envió ${nd === 1 ? 'un documento nuevo' : nd + ' documentos nuevos'}.</span><button type="button" class="btn btn-sm btn-primary" data-go="documentos">Ver</button></div>` : ''}
     ${nu ? `<div class="callout">${ic('bell', 20)}<span>Tienes ${nu === 1 ? 'una notificación nueva' : nu + ' notificaciones nuevas'} sobre tus trámites.</span><button type="button" class="btn btn-sm btn-primary" data-tab-go="${nuTab}">Ver</button></div>` : ''}
     ${obs ? `<div class="callout" style="border-color:color-mix(in srgb,var(--danger) 40%,transparent);background:color-mix(in srgb,var(--danger) 8%,transparent)">${ic('alert', 20)}<span>Tienes ${obs === 1 ? 'un requerimiento observado' : obs + ' requerimientos observados'} que debes subsanar.</span><button type="button" class="btn btn-sm btn-ghost" data-tab-go="obs">Revisar</button></div>` : ''}
@@ -2288,14 +1903,14 @@ function homeAbast(u) {
   const T = state.tramites, cnt = f => T.filter(f).length, month = localDay(new Date().toISOString()).slice(0, 7), esp = u.rol === 'especialista';
   const mineList = myTramites(u), scope = esp ? mineList : T;
   const concMes = scope.filter(t => t.estado === 'revisado' && concluidoEn(t) && localDay(concluidoEn(t)).startsWith(month)).length;
-  const mine = (u.rol === 'secretaria' ? T.filter(t => t.estado === 'enviado' || t.estado === 'aprobado') : u.rol === 'jefe' ? T.filter(t => t.estado === 'derivado' || t.estado === 'recibido') : mineList.filter(t => t.estado === 'ejecucion')).sort((a, b) => a.actualizado.localeCompare(b.actualizado));
+  const mine = (u.rol === 'secretaria' ? T.filter(t => t.estado === 'enviado') : u.rol === 'jefe' ? T.filter(t => t.estado === 'derivado' || t.estado === 'recibido') : mineList.filter(t => t.estado === 'aprobado' || t.estado === 'ejecucion')).sort((a, b) => a.actualizado.localeCompare(b.actualizado));
   const porTipo = TIPOS_REQ.map(x => [x.v, scope.filter(t => t.tipoReq === x.v).length]), max = Math.max(1, ...porTipo.map(x => x[1]));
   const acts = scope.flatMap(t => t.historial.map(h => ({ ...h, codigo: t.codigo }))).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 6);
   const tile = (val, lbl, icn, tab, warn) => `<button type="button" class="tile${warn && val ? ' warn' : ''}" data-tab-go="${tab}">${ic(icn, 20)}<b>${val}</b><span>${lbl}</span></button>`;
-  const hero = { secretaria: ['Recibe los requerimientos, sella la recepción, elévalos a Jefatura y deriva los aprobados a su responsable.', 'env'], jefe: ['Revisa los documentos, firma y asigna quién debe ejecutarlos.', 'der'], especialista: ['Atiende los requerimientos que te asignaron y márcalos como atendidos.', 'eje'] }[u.rol];
+  const hero = { secretaria: ['Recibe los requerimientos, verifica los requisitos y elévalos a Jefatura.', 'env'], jefe: ['Revisa los requerimientos y derívalos al responsable de su ejecución.', 'der'], especialista: ['Atiende los requerimientos que te asignaron y márcalos como atendidos.', 'eje'] }[u.rol];
   const tiles = esp
-    ? `${tile(mine.length, 'En ejecución', 'clock', 'eje', true)}${tile(concMes, 'Atendidos este mes', 'check', 'ok', false)}${tile(mineList.length, 'Asignados en total', 'inbox', 'all', false)}`
-    : `${tile(cnt(t => t.estado === 'enviado'), 'Por recibir', 'inbox', 'env', u.rol === 'secretaria')}${tile(cnt(t => t.estado === 'derivado' || t.estado === 'recibido'), 'Revisión de Jefatura', 'sign', 'der', u.rol === 'jefe')}${tile(cnt(t => t.estado === 'aprobado'), 'Por derivar', 'send', 'apr', u.rol === 'secretaria')}${tile(cnt(t => t.estado === 'ejecucion'), 'En ejecución', 'clock', 'eje', false)}${tile(concMes, 'Concluidos este mes', 'check', 'ok', false)}`;
+    ? `${tile(mineList.filter(t => t.estado === 'aprobado').length, 'Por iniciar', 'send', 'apr', true)}${tile(mineList.filter(t => t.estado === 'ejecucion').length, 'En ejecución', 'clock', 'eje', false)}${tile(concMes, 'Atendidos este mes', 'check', 'ok', false)}${tile(mineList.length, 'Asignados en total', 'inbox', 'all', false)}`
+    : `${tile(cnt(t => t.estado === 'enviado'), 'Por recibir', 'inbox', 'env', u.rol === 'secretaria')}${tile(cnt(t => t.estado === 'derivado' || t.estado === 'recibido'), 'Revisión de Jefatura', 'eye', 'der', u.rol === 'jefe')}${tile(cnt(t => t.estado === 'aprobado'), 'Derivados', 'send', 'apr', false)}${tile(cnt(t => t.estado === 'ejecucion'), 'En ejecución', 'clock', 'eje', false)}${tile(concMes, 'Concluidos este mes', 'check', 'ok', false)}`;
   return `<div class="home-hero"><div><p class="eyebrow">${esc(ROLES[u.rol].label)}</p><h1>${greet()}, ${esc(u.nombre.split(' ')[0])}</h1><p>${hero[0]}</p></div><button type="button" class="btn btn-primary btn-lg" data-tab-go="${hero[1]}">${ic('inbox')}Ir a la bandeja</button></div>
     <div class="tiles">${tiles}${tile(scope.filter(vencido).length, 'Plazos vencidos', 'clock', 'venc', true)}</div>
     <div class="home-grid">
@@ -2313,7 +1928,7 @@ function homeAbast(u) {
             <button type="button" class="btn btn-ghost" data-go="reportes">${ic('chart')}Registrar expedientes anteriores</button>
             <button type="button" class="btn btn-ghost" data-go="carpetas">${ic('folder')}Buscar en Carpetas</button>
             ${u.rol === 'jefe' ? `<button type="button" class="btn btn-ghost" data-go="usuarios">${ic('users')}Gestionar usuarios y accesos</button>` : ''}
-            <button type="button" class="btn btn-ghost" data-go="perfil">${ic('sign')}Mis firmas y sellos</button>
+            <button type="button" class="btn btn-ghost" data-go="perfil">${ic('user')}Mi perfil</button>
           </div></article>
       </div>
     </div>`;
@@ -2346,9 +1961,9 @@ function renderUsuarios() {
           <form class="form-grid" id="cfgForm">
             <label class="field full">Nombre de la entidad<input name="entidad" value="${esc(c.entidad)}" maxlength="80"></label>
             <label class="field">Unidad que recibe<input name="unidad" value="${esc(c.unidad)}" maxlength="60"></label>
-            <label class="field">Ciudad (sello de área)<input name="ciudad" value="${esc(c.ciudad)}" maxlength="40"></label>
+            <label class="field">Ciudad<input name="ciudad" value="${esc(c.ciudad)}" maxlength="40"></label>
           </form>
-          <div class="save-row"><span class="meta-line">Aparece en los sellos de todos.</span><button type="button" class="btn btn-primary" data-ua="cfg">Guardar</button></div></article>
+          <div class="save-row"><span class="meta-line">Aparece en los documentos que emite el sistema.</span><button type="button" class="btn btn-primary" data-ua="cfg">Guardar</button></div></article>
         <article class="card"><header class="card-head"><h2>Plazos, UIT y feriados</h2></header>
           <form class="form-grid" id="cfg2Form">
             <label class="field">Valor de la UIT (S/)<input name="uit" type="number" min="1" step="1" value="${c.uit}"></label>
@@ -2376,9 +1991,9 @@ function renderUsuarios() {
           <div class="save-row"><span class="meta-line">Catálogo: ${SEACE_UO.length} unidades orgánicas de la plantilla oficial.</span><button type="button" class="btn btn-primary" data-ua="cfg3">Guardar</button></div></article>
         <article class="card"><header class="card-head"><h2>Cómo funciona el acceso</h2></header>
           <ul class="plain-list">
-            <li>Las cuentas de <b>áreas usuarias</b> entran a su portal y ven solo sus propios requerimientos, su firma y sus sellos.</li>
-            <li><b>Secretaría</b> recibe y sella los documentos, los eleva a Jefatura y deriva los aprobados a su responsable.</li>
-            <li><b>Jefatura</b> revisa, firma, asigna quién ejecuta cada requerimiento y administra los usuarios.</li>
+            <li>Las cuentas de <b>áreas usuarias</b> entran a su portal y ven solo sus propios requerimientos y su seguimiento.</li>
+            <li><b>Secretaría</b> recibe los documentos, verifica los requisitos y los eleva a Jefatura.</li>
+            <li><b>Jefatura</b> revisa cada requerimiento, lo deriva al responsable de su ejecución y administra los usuarios.</li>
             <li><b>Especialistas</b> ven en su pestaña “Ejecución” los requerimientos que se les asignaron y los marcan como atendidos.</li>
             <li>Las contraseñas nuevas o restablecidas son temporales: la persona crea la suya al ingresar.</li>
             <li>Tras 5 intentos fallidos, el ingreso se bloquea por 30 segundos.</li>
@@ -2475,22 +2090,33 @@ const enJefatura = t => t.estado === 'derivado' || t.estado === 'recibido';
 const myTramites = u => u.rol === 'area' ? state.tramites.filter(t => t.creadorId === u.id || t.area === u.area) : u.rol === 'especialista' ? state.tramites.filter(t => t.asignadoId === u.id) : state.tramites.slice();
 const userName = id => { const x = state.usuarios.find(u => u.id === id); return x ? x.nombre : '—'; };
 const rolCorto = r => ({ secretaria: 'Secretaría', jefe: 'Jefatura', especialista: 'el responsable de ejecución', area: 'el área usuaria' }[r] || 'Abastecimiento');
-const stLabel = (t, u) => (u && u.rol === 'area' && t.estado === 'enviado') ? 'Enviado' : (ESTADOS[t.estado] || ESTADOS.enviado).label;
+/* Estados tal como los ve el área usuaria */
+const ESTADOS_AREA = { enviado: 'En curso', recibido: 'En curso', derivado: 'Revisión de Jefatura', aprobado: 'Derivado', ejecucion: 'En ejecución', revisado: 'Concluido', observado: 'Observado' };
+const stLabel = (t, u) => (u && u.rol === 'area' && ESTADOS_AREA[t.estado]) ? ESTADOS_AREA[t.estado] : (ESTADOS[t.estado] || ESTADOS.enviado).label;
+/* Pasos del seguimiento que ve el área usuaria */
+const PASOS = [['curso', 'En curso', ['enviado', 'recibido']], ['jef', 'Revisión de Jefatura', ['derivado']], ['der', 'Derivado', ['aprobado']], ['eje', 'En ejecución', ['ejecucion']], ['fin', 'Concluido', ['revisado']]];
+function pasosHtml(t) {
+  if (rutaOf(t) !== 'contratacion' && t.estado !== 'observado' && !PASOS.some(p => p[2].includes(t.estado))) return '';
+  let cur = PASOS.findIndex(p => p[2].includes(t.estado));
+  const obs = t.estado === 'observado';
+  if (obs) { const o = [...t.historial].reverse().find(h => h.tipo !== 'visto' && /observ/i.test(h.accion || '')); cur = o && o.rol === 'jefe' ? 1 : 0; }
+  return `<ol class="pasos" aria-label="Seguimiento del trámite">${PASOS.map(([k, l], i) => `<li class="${i < cur || t.estado === 'revisado' ? 'ok' : i === cur ? (obs ? 'obs' : 'cur') : ''}"><i>${i < cur || t.estado === 'revisado' ? ic('check', 12) : i + 1}</i><span>${l}</span></li>`).join('')}</ol>`;
+}
 const localDay = iso => { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const concluidoEn = t => t.concluido || (t.estado === 'revisado' ? t.actualizado : null);
 const diasDe = t => Math.max(0, Math.round(((concluidoEn(t) ? new Date(concluidoEn(t)) : new Date()) - new Date(t.creado)) / 864e5));
 const staffAbast = () => state.usuarios.filter(x => x.rol !== 'area' && x.activo !== false).sort((a, b) => (a.rol === 'especialista' ? 0 : 1) - (b.rol === 'especialista' ? 0 : 1) || a.nombre.localeCompare(b.nombre, 'es'));
 function tabsFor(role) {
   if (role === 'area') return [['curso', 'En curso', t => CURSO.includes(t.estado)], ['obs', 'Observados', t => t.estado === 'observado'], ['ok', 'Concluidos', t => t.estado === 'revisado'], ['all', 'Todos', () => true]];
-  if (role === 'secretaria') return [['env', 'Por recibir', t => t.estado === 'enviado'], ['der', 'Revisión de Jefatura', enJefatura], ['apr', 'Por derivar', t => t.estado === 'aprobado'], ['eje', 'Ejecución', t => t.estado === 'ejecucion'], ['venc', 'Vencidos', vencido], ['all', 'Todos', () => true]];
-  if (role === 'especialista') return [['eje', 'Ejecución', t => t.estado === 'ejecucion'], ['ok', 'Atendidos', t => t.estado === 'revisado'], ['venc', 'Vencidos', vencido], ['all', 'Todos', () => true]];
-  return [['der', 'Revisión de Jefatura', enJefatura], ['apr', 'Por derivar', t => t.estado === 'aprobado'], ['eje', 'Ejecución', t => t.estado === 'ejecucion'], ['ok', 'Concluidos', t => t.estado === 'revisado'], ['obs', 'Observados', t => t.estado === 'observado'], ['venc', 'Vencidos', vencido], ['all', 'Todos', () => true]];
+  if (role === 'secretaria') return [['env', 'Por recibir', t => t.estado === 'enviado'], ['der', 'Revisión de Jefatura', enJefatura], ['apr', 'Derivados', t => t.estado === 'aprobado'], ['eje', 'Ejecución', t => t.estado === 'ejecucion'], ['venc', 'Vencidos', vencido], ['all', 'Todos', () => true]];
+  if (role === 'especialista') return [['apr', 'Por iniciar', t => t.estado === 'aprobado'], ['eje', 'Ejecución', t => t.estado === 'ejecucion'], ['ok', 'Atendidos', t => t.estado === 'revisado'], ['venc', 'Vencidos', vencido], ['all', 'Todos', () => true]];
+  return [['der', 'Revisión de Jefatura', enJefatura], ['apr', 'Derivados', t => t.estado === 'aprobado'], ['eje', 'Ejecución', t => t.estado === 'ejecucion'], ['ok', 'Concluidos', t => t.estado === 'revisado'], ['obs', 'Observados', t => t.estado === 'observado'], ['venc', 'Vencidos', vencido], ['all', 'Todos', () => true]];
 }
 function pendingCount(u) {
   if (!u) return 0;
-  if (u.rol === 'secretaria') return state.tramites.filter(t => t.estado === 'enviado' || t.estado === 'aprobado').length;
+  if (u.rol === 'secretaria') return state.tramites.filter(t => t.estado === 'enviado').length;
   if (u.rol === 'jefe') return state.tramites.filter(enJefatura).length;
-  if (u.rol === 'especialista') return myTramites(u).filter(t => t.estado === 'ejecucion').length;
+  if (u.rol === 'especialista') return myTramites(u).filter(t => t.estado === 'aprobado' || t.estado === 'ejecucion').length;
   return myTramites(u).reduce((a, t) => a + unreadOf(t).length, 0);
 }
 
@@ -2612,9 +2238,11 @@ function ntfOf(h) {
   if (h.tipo === 'visto') return (h.rol === 'secretaria' || h.rol === 'jefe') ? { msg: `Tu documento fue abierto por ${rolCorto(h.rol)}`, ic: 'eye' } : null;
   if (a.startsWith('Enviado')) return { msg: 'Documento enviado con éxito a la Unidad de Abastecimiento', ic: 'send', cls: 'good' };
   if (a.startsWith('Subsanado')) return { msg: 'Documento subsanado y reenviado con éxito', ic: 'send', cls: 'good' };
-  if (a.startsWith('Recibido')) return { msg: `Recibido y sellado por Secretaría${h.nota ? ' · ' + h.nota : ''}`, ic: 'stamp' };
-  if (a.startsWith('Elevado') || a.startsWith('Derivado al Jefe')) return { msg: 'En revisión del Jefe de la Unidad', ic: 'sign' };
+  if (a.startsWith('Recibido')) return { msg: `Recibido por Secretaría${h.nota ? ' · ' + h.nota : ''}`, ic: 'inbox' };
+  if (a.startsWith('Elevado') || a.startsWith('Derivado al Jefe')) return { msg: 'En revisión del Jefe de la Unidad', ic: 'eye' };
+  if (a.startsWith('Revisado y derivado')) return { msg: a.replace('Revisado y derivado por Jefatura a', 'Revisado por Jefatura y derivado a'), ic: 'send', cls: 'good' };
   if (a.includes('· conforme')) return { msg: 'Revisado y aprobado por Jefatura', ic: 'check', cls: 'good' };
+  if (a.startsWith('En ejecución por')) return { msg: `Tu requerimiento está en ejecución (${a.slice(17)})`, ic: 'clock' };
   if (a.startsWith('Derivado para ejecución')) return { msg: a.replace('Derivado para ejecución a', 'Asignado para su ejecución a'), ic: 'user' };
   if (a.startsWith('Reasignado')) return { msg: a.replace('Reasignado a', 'Nuevo responsable de ejecución:'), ic: 'user' };
   if (a.startsWith('Respuesta despachada:')) return { msg: `La Unidad te envió ${a.slice(22)}${h.nota ? ' · ' + h.nota : ''}`, ic: 'mail', cls: 'good' };
@@ -2628,7 +2256,7 @@ function ntfOf(h) {
 const ntfList = t => t.historial.map(h => ({ h, n: ntfOf(h) })).filter(x => x.n);
 const unreadOf = t => ntfList(t).filter(x => x.h.fecha > (t.leidoArea || ''));
 const lastNtf = t => { const l = ntfList(t); return l.length ? l[l.length - 1] : null; };
-const STAGE_OWNER = { enviado: u => u.rol === 'secretaria', recibido: u => u.rol === 'jefe', derivado: u => u.rol === 'jefe', aprobado: u => u.rol === 'secretaria' || u.rol === 'jefe', ejecucion: (u, t) => t.asignadoId === u.id };
+const STAGE_OWNER = { enviado: u => u.rol === 'secretaria', recibido: u => u.rol === 'jefe', derivado: u => u.rol === 'jefe', aprobado: (u, t) => t.asignadoId === u.id, ejecucion: (u, t) => t.asignadoId === u.id };
 async function markSeen(t, u) {
   if (u.rol === 'area') {
     if ((t.creadorId === u.id || t.area === u.area) && unreadOf(t).length) { t.leidoArea = new Date().toISOString(); await DB.put('tramites', t); updateBadge(); return true; }
@@ -2638,6 +2266,7 @@ async function markSeen(t, u) {
   for (let i = t.historial.length - 1; i >= 0; i--) { const h = t.historial[i]; if (h.uid === u.id) return false; if (h.tipo !== 'visto') break; }
   t.historial.push({ fecha: new Date().toISOString(), uid: u.id, nombre: u.nombre, cargo: u.cargo, rol: u.rol, tipo: 'visto', estado: t.estado, accion: `Visto por ${rolCorto(u.rol)}`, nota: '' });
   await DB.put('tramites', t);
+  avisarCambio(t);
   return true;
 }
 function ntfPanel(items, tab) {
@@ -2775,7 +2404,7 @@ async function audit(accion, detalle = '', ref = '') {
 function privHtml() {
   const c = state.config;
   return `<div class="priv"><p>La <b>${esc(titleCase(c.entidad))}</b>, a través de la ${esc(titleCase(c.unidad))}, trata tus datos personales conforme a la Ley N.° 29733, Ley de Protección de Datos Personales, y su reglamento.</p><ul>
-    <li><b>Datos que se tratan:</b> nombres y apellidos, cargo, área, correo institucional, firma y sellos digitalizados, y el registro de tus acciones en el sistema (ingresos, consultas, descargas y cambios).</li>
+    <li><b>Datos que se tratan:</b> nombres y apellidos, cargo, área, correo institucional y el registro de tus acciones en el sistema (ingresos, consultas, descargas y cambios).</li>
     <li><b>Finalidad:</b> gestionar la recepción, revisión, ejecución y archivo de los documentos de la Unidad, y dejar trazabilidad de cada trámite.</li>
     <li><b>Acceso según el rol:</b> cada persona ve solo lo que corresponde a su rol (área usuaria, Secretaría, Jefatura o especialista). Jefatura puede consultar el registro de auditoría.</li>
     <li><b>Conservación:</b> los datos se conservan mientras dure el trámite y durante los plazos de archivo de la entidad.</li>
@@ -2824,7 +2453,7 @@ async function buildCargoPdf(t) {
   T('Constancia de que el documento fue recibido en la mesa de partes digital de la Unidad.', L, y, 9.5, f, mut); y -= 22;
   const anx = (t.anexos || []).map(a => `${a.nombre} (${a.folios || '?'} ${a.folios === 1 ? 'folio' : 'folios'})`).join('; ') || 'Ninguno';
   const ck = t.checklist ? `${t.checklist.items.filter(x => x.ok).length} de ${t.checklist.items.length} requisitos conformes` : '—';
-  const rows = [['N.° de registro', t.registro || '—'], ['Código del trámite', t.codigo], ['Fecha y hora de recepción', rec.fecha ? fmtDT(rec.fecha) : '—'], ['Remitente', t.area], ['Firmado por', `${t.emisorNombre} · ${t.emisorCargo}`], ['Documento', `${t.tipoDoc} ${t.numDoc || ''}`.trim()], ['Asunto', t.asunto], ['Tipo de trámite', `${t.tipoReq} · ${RUTAS[rutaOf(t)]}`], ['Folios', String(t.folios)], ['Anexos', anx], ['Verificación', ck], ['Recibido por', `${rec.por || '—'}${rec.cargo ? ' · ' + rec.cargo : ''}`]];
+  const rows = [['N.° de registro', t.registro || '—'], ['Código del trámite', t.codigo], ['Fecha y hora de recepción', rec.fecha ? fmtDT(rec.fecha) : '—'], ['Remitente', t.area], ['Emitido por', `${t.emisorNombre} · ${t.emisorCargo}`], ['Documento', `${t.tipoDoc} ${t.numDoc || ''}`.trim()], ['Asunto', t.asunto], ['Tipo de trámite', `${t.tipoReq} · ${RUTAS[rutaOf(t)]}`], ['Folios', String(t.folios)], ['Anexos', anx], ['Verificación', ck], ['Recibido por', `${rec.por || '—'}${rec.cargo ? ' · ' + rec.cargo : ''}`]];
   const vx = L + 150, vw = R - vx;
   rows.forEach(([l, v]) => {
     const lines = wrapLines(pdfSafe(v), f, 10, vw), hgt = Math.max(1, lines.length) * 13 + 10;
@@ -2885,7 +2514,6 @@ async function emitirDocumento(pre = {}) {
       <label class="field full"><span>Asunto <em>*</em></span><input name="asunto" maxlength="200" value="${esc(pre.asunto || '')}"></label>
       <label class="field full">Referencia<input name="referencia" maxlength="200" value="${esc(pre.referencia || '')}"></label>
       <label class="field full"><span>Contenido <em>*</em></span><textarea class="plain" name="cuerpo" rows="8" maxlength="6000" placeholder="Tengo el agrado de dirigirme a usted para…">${esc(pre.cuerpo || '')}</textarea></label>
-      <label class="check full"><input type="checkbox" name="firmar" checked> Colocar mi firma y mis sellos antes de emitir</label>
       ${pre.tramiteId ? `<p class="small full" style="margin:0">Queda vinculado al trámite ${esc(pre.codigo)}; al despacharlo, el área usuaria recibe una notificación.</p>` : ''}</form>`,
     buttons: [{ label: 'Cancelar', value: null }, { label: 'Solo emitir', value: d => chk(d, false) }, { label: `${ic('send', 16)}Emitir y despachar`, cls: 'btn-primary', value: d => chk(d, true) }],
     onOpen: d => { const upd = () => { const tp = $('[name=tipo]', d).value; $('.emi-num', d).textContent = nomenclaturaEmi(tp, nextNumEmi(tp, anio)); }; d.addEventListener('change', upd); upd(); } });
@@ -2894,7 +2522,6 @@ async function emitirDocumento(pre = {}) {
   const doc = { id: uid(), tipo: f.tipo, numero: n, anio, nomenclatura: nomenclaturaEmi(f.tipo, n, anio), fecha: new Date().toISOString(), destinoArea: f.destinoArea, destinatario: f.destinatario, asunto: f.asunto, referencia: f.referencia, cuerpo: f.cuerpo, tramiteId: pre.tramiteId || null, emisorId: u.id, emisorNombre: u.nombre, emisorCargo: u.cargo, estado: 'emitido' };
   let bytes;
   try { bytes = await buildOficioPdf(doc, u); } catch (e) { console.error(e); toast('No se pudo generar el PDF', 'err'); return null; }
-  if (f.firmar === 'on') { const r = await openStamper({ bytes, title: `Firmar · ${doc.nomenclatura}`, tools: ['firma', 'postfirma', 'selloArea', 'texto'], required: ['firma'], startPage: 'last', note: 'Coloca tu firma sobre la línea y, si corresponde, tus sellos' }); if (!r) { toast('El documento no se emitió', 'warn'); return null; } bytes = r.bytes; }
   doc.pdf = new Blob([bytes], { type: 'application/pdf' }); doc.hash = await sha256(bytes); doc.folios = await pdfPageCount(bytes) || 1;
   await DB.put('emitidos', doc); state.emitidos.push(doc);
   audit('Emisión de documento', `${doc.nomenclatura} · ${doc.asunto}`, doc.id);
@@ -3583,19 +3210,19 @@ function updateBadge() {
 function nextStepText(t) {
   const r = t.asignadoId ? userName(t.asignadoId) : 'el responsable';
   return { enviado: 'Pendiente de recepción en Secretaría.', recibido: 'Pendiente de revisión del Jefe de la Unidad.', derivado: 'Pendiente de revisión del Jefe de la Unidad.',
-    aprobado: `Conforme. Pendiente de derivación a ${r} para su ejecución.`, ejecucion: `En ejecución por ${r}.`,
+    aprobado: `Derivado por Jefatura a ${r}. Pendiente de inicio de la ejecución.`, ejecucion: `En ejecución por ${r}.`,
     revisado: 'Trámite concluido y archivado en Carpetas.', observado: 'Devuelto al área usuaria para subsanar.' }[t.estado] || '';
 }
 function renderTramites() {
   const u = me(); if (!u) return;
   const R = ROLES[u.rol], area = u.rol === 'area';
   const TT = { area: ['Mis trámites', `Envía los requerimientos de tu área a la ${titleCase(state.config.unidad)} y sigue su situación.`],
-    secretaria: ['Bandeja de Secretaría', 'Recibe los documentos, elévalos a Jefatura y deriva los aprobados a su responsable.'],
-    jefe: ['Bandeja de Jefatura', 'Revisa y firma los documentos, y asigna quién debe ejecutarlos.'],
-    especialista: ['Bandeja de ejecución', 'Atiende los requerimientos que te asignaron y márcalos como atendidos.'] }[u.rol];
+    secretaria: ['Bandeja de Secretaría', 'Recibe los documentos, verifica los requisitos y elévalos a Jefatura.'],
+    jefe: ['Bandeja de Jefatura', 'Revisa los requerimientos y derívalos al responsable de su ejecución.'],
+    especialista: ['Bandeja de ejecución', 'Inicia la ejecución de lo que Jefatura te derivó y márcalo como atendido.'] }[u.rol];
   $('#tTitle').textContent = TT[0]; $('#tSub').textContent = TT[1];
   $('#btnNuevoTram').hidden = !area;
-  $('#roleBar').innerHTML = `<span class="av" style="--av:${R.color}">${esc(initials(u.nombre))}</span><div class="rb-txt"><b>${esc(u.nombre)}</b>${esc(u.cargo)} · ${esc(area ? u.area : R.label)}</div><button type="button" class="btn btn-ghost btn-sm" data-go="perfil">${ic('sign', 16)}Mis firmas y sellos</button>`;
+  $('#roleBar').innerHTML = `<span class="av" style="--av:${R.color}">${esc(initials(u.nombre))}</span><div class="rb-txt"><b>${esc(u.nombre)}</b>${esc(u.cargo)} · ${esc(area ? u.area : R.label)}</div><button type="button" class="btn btn-ghost btn-sm" data-go="perfil">${ic('user', 16)}Mi perfil</button>`;
   const list = myTramites(u), tabs = tabsFor(u.rol);
   let tab = state.tTab[u.rol] || tabs[0][0];
   if (!tabs.some(t => t[0] === tab)) tab = tabs[0][0];
@@ -3653,7 +3280,26 @@ async function saveTramite(t) {
   if (i >= 0) state.tramites[i] = t; else state.tramites.push(t);
   await DB.put('tramites', t);
   updateBadge();
+  avisarCambio(t);
 }
+/* ---- Actividad simultánea: las ventanas abiertas se actualizan solas ----
+   En el prototipo funciona entre pestañas del mismo navegador (BroadcastChannel).
+   Con servidor, este mismo aviso llegará por WebSocket a todos los equipos. */
+const canal = (() => { try { return 'BroadcastChannel' in window ? new BroadcastChannel('archivo-digital') : null; } catch (e) { return null; } })();
+function avisarCambio(t) { try { if (canal) canal.postMessage({ k: 'tramite', id: t.id, n: t.historial.length }); } catch (e) {} }
+if (canal) canal.onmessage = async ev => {
+  const d = ev.data || {}; if (d.k !== 'tramite') return;
+  const prev = state.tramites.find(x => x.id === d.id), antes = prev ? prev.historial.length : 0;
+  state.tramites = await DB.all('tramites');
+  if (!state.userId) return;
+  const u = me(), t = state.tramites.find(x => x.id === d.id);
+  updateBadge(); refreshView();
+  if (!t || !u) return;
+  const nuevos = t.historial.slice(antes).filter(h => h.uid !== u.id && (u.rol === 'area' || h.tipo !== 'visto'));
+  const h = nuevos[nuevos.length - 1]; if (!h) return;
+  if (u.rol === 'area') { if (t.creadorId === u.id || t.area === u.area) { const n = ntfOf(h); if (n) toast(`${t.codigo}: ${n.msg}`, n.cls === 'bad' ? 'warn' : ''); } }
+  else if (actionsFor(t, u).some(a => a.k !== 'archivo')) toast(`${t.codigo}: ${h.accion} · requiere tu atención`);
+};
 async function setPdf(t, bytes, accion = 'Nueva versión') {
   bytes = await withPdfMeta(bytes, t);
   t.pdf = new Blob([bytes], { type: 'application/pdf' }); t.hash = await sha256(bytes); t.folios = await pdfPageCount(bytes) || t.folios;
@@ -3714,10 +3360,7 @@ function docForm(nuevo, preTipo, t) {
       <label class="btn btn-ghost btn-sm" style="justify-self:start"><input type="file" class="fcam" accept="image/*" capture="environment" hidden>${ic('camera', 16)}Tomar foto con el celular</label>
       <div class="filelist main-list"></div>
       ${nuevo ? '' : '<span class="small" style="margin:0">Si no adjuntas nada, se reenvía el mismo documento.</span>'}</div>`;
-  const signBlock = `<div class="field full"><span>Firma y sello del área</span><div class="seg two">
-      <label class="seg-op"><input type="radio" name="firmar" value="si" checked><span>${ic('sign')}<span>Firmar y sellar aquí<small>Colocar mi firma y sellos digitales</small></span></span></label>
-      <label class="seg-op"><input type="radio" name="firmar" value="no"><span>${ic('stamp')}<span>Ya tiene firma y sello<small>El escaneo ya los incluye</small></span></span></label></div></div>`;
-  if (!nuevo) return `<form class="form-grid">${rutaOf(t) === 'documental' ? '' : reqSections(t)}${fileBlock}${signBlock}<label class="field full">Comentario de subsanación<textarea class="plain" name="nota" rows="3" placeholder="Ej.: Se adjuntan las especificaciones técnicas solicitadas."></textarea></label></form>`;
+  if (!nuevo) return `<form class="form-grid">${rutaOf(t) === 'documental' ? '' : reqSections(t)}${fileBlock}<label class="field full">Comentario de subsanación<textarea class="plain" name="nota" rows="3" placeholder="Ej.: Se adjuntan las especificaciones técnicas solicitadas."></textarea></label></form>`;
   const pre = preTipo && TIPOS_REQ.some(x => x.v === preTipo) ? preTipo : TIPOS_REQ[0].v;
   const grp = () => `<p class="rgroup">Tipo de requerimiento</p><div class="seg full">${TIPOS_REQ.map(x => `<label class="seg-op"><input type="radio" name="tipoReq" value="${x.v}" ${x.v === pre ? 'checked' : ''}><span>${ic(x.ic)}<span>${x.v}${x.sub ? `<small>${x.sub}</small>` : ''}</span></span></label>`).join('')}</div>`;
   return `<form class="form-grid" autocomplete="off">
@@ -3730,7 +3373,7 @@ function docForm(nuevo, preTipo, t) {
     ${reqSections(null, rutaDe(pre), tipoInfo(pre).objeto)}
     ${fileBlock}
     <label class="check full"><input type="checkbox" name="cb" checked> ${ic('barcode', 16)}Colocar el código de barras en la primera página del documento</label>
-    ${signBlock}</form>`;
+    <p class="small full" style="margin:0">Adjunta el documento con la firma y el sello de tu área ya colocados (escaneado o PDF firmado).</p></form>`;
 }
 function readReq(d, ruta) {
   const v = n => { const el = $(`[name="${n}"]`, d); return el ? String(el.value).trim() : ''; };
@@ -3808,7 +3451,6 @@ async function filesToPdf(files, title) {
   } catch (e) { console.error(e); toast('No se pudo preparar el documento', 'err'); return null; }
   finally { stop(); }
 }
-const AREA_TOOLS = { tools: ['firma', 'selloArea', 'postfirma', 'texto'], required: ['firma'], startPage: 'last', note: 'Coloca tu firma y tus sellos donde corresponda' };
 
 async function nuevoTramite(preTipo) {
   const u = me();
@@ -3830,12 +3472,6 @@ async function nuevoTramite(preTipo) {
     const dt = docTec(form.req.objeto), eb = await filesToPdf(form.eett, dt.cod + ' ' + form.asunto); if (!eb) return;
     anexo = { id: uid(), tipo: dt.cod, nombre: dt.nombre, blob: new Blob([eb], { type: 'application/pdf' }), hash: await sha256(eb), folios: await pdfPageCount(eb) || 0, fecha: new Date().toISOString() };
   }
-  let firmado = false;
-  if (form.firmar === 'si') {
-    const r = await openStamper({ bytes, title: 'Firmar y sellar el documento', ...AREA_TOOLS });
-    if (!r) { toast('El trámite no se envió', 'warn'); return; }
-    bytes = r.bytes; firmado = true;
-  }
   const now = new Date().toISOString(), codigo = nextCodigo(), barcode = nextBarcode(), cbPdf = form.cb === 'on';
   if (cbPdf) bytes = await stampBarcode(bytes, { codigo, barcode });
   const t = { id: uid(), codigo, barcode, barcodePdf: cbPdf, creadorId: u.id, area: u.area, emisorNombre: u.nombre, emisorCargo: u.cargo,
@@ -3843,7 +3479,7 @@ async function nuevoTramite(preTipo) {
     ruta: form.ruta, req: form.req || null, conf: form.conf || null, anexos: anexo ? [anexo] : [],
     estado: 'enviado', registro: null, registros: [], folios: 0, creado: now, actualizado: now, historial: [] };
   await setPdf(t, bytes, 'Documento original');
-  addHist(t, `Enviado a la ${titleCase(state.config.unidad)}`, firmado ? 'Firmado y sellado digitalmente por el área usuaria.' : 'Documento con firma y sello físicos (escaneado).');
+  addHist(t, `Enviado a la ${titleCase(state.config.unidad)}`, 'Documento adjuntado por el área usuaria.');
   await saveTramite(t);
   toast(`Trámite ${t.codigo} enviado`);
   state.tTab.area = 'curso';
@@ -3853,9 +3489,10 @@ async function nuevoTramite(preTipo) {
 
 function actionsFor(t, u) {
   const a = [], mine = t.creadorId === u.id || t.area === u.area;
-  if (u.rol === 'secretaria' && t.estado === 'enviado') a.push({ k: 'recibir', label: 'Recibir, sellar y elevar a Jefatura', ic: 'stamp', cls: 'btn-primary' }, { k: 'observar', label: 'Devolver con observación', ic: 'alert' });
-  if (u.rol === 'jefe' && enJefatura(t)) a.push({ k: 'revisar', label: 'Revisar, sellar y firmar', ic: 'sign', cls: 'btn-primary' });
-  if ((u.rol === 'secretaria' || u.rol === 'jefe') && t.estado === 'aprobado') a.push({ k: 'ejecutar', label: 'Derivar a ejecución', ic: 'send', cls: 'btn-primary' });
+  if (u.rol === 'secretaria' && t.estado === 'enviado') a.push({ k: 'recibir', label: 'Recibir y elevar a Jefatura', ic: 'inbox', cls: 'btn-primary' }, { k: 'observar', label: 'Devolver con observación', ic: 'alert' });
+  if (u.rol === 'jefe' && enJefatura(t)) a.push({ k: 'derivarJefe', label: 'Derivar', ic: 'send', cls: 'btn-primary' }, { k: 'observar', label: 'Observar y devolver', ic: 'alert' });
+  if (t.estado === 'aprobado' && t.asignadoId === u.id) a.push({ k: 'iniciar', label: 'Iniciar ejecución', ic: 'clock', cls: 'btn-primary' });
+  if (u.rol === 'jefe' && t.estado === 'aprobado' && t.asignadoId !== u.id) a.push({ k: 'reasignar', label: 'Cambiar responsable', ic: 'user' });
   if (t.estado === 'ejecucion' && t.asignadoId === u.id) a.push(rutaOf(t) === 'conformidad' ? { k: 'atender', label: 'Registrar pago y concluir', ic: 'check', cls: 'btn-primary' } : { k: 'atender', label: 'Marcar como atendido', ic: 'check', cls: 'btn-primary' });
   if (u.rol === 'jefe' && t.estado === 'ejecucion' && t.asignadoId !== u.id) a.push({ k: 'reasignar', label: 'Reasignar responsable', ic: 'user' });
   if (u.rol === 'area' && mine && t.estado === 'observado') a.push({ k: 'subsanar', label: 'Subsanar y reenviar', ic: 'send', cls: 'btn-primary' });
@@ -3874,6 +3511,7 @@ async function openTramite(id) {
       <aside class="tdet-side">
         <span class="chip-st ${st.cls}">${esc(stLabel(t, u))}</span>
         <h4 class="tdet-title">${esc(t.asunto)}</h4>
+        ${pasosHtml(t)}
         ${detailPlazos(t, u)}
         <dl class="dl">
           <dt>Código</dt><dd>${esc(t.codigo)}</dd>
@@ -4117,13 +3755,10 @@ async function runAction(k, t) {
     if (!chk) return;
     if (chk.obs) { t.estado = 'observado'; t.checklist = { fecha: new Date().toISOString(), por: me().nombre, items: checklistDef(t).map(([k2, l]) => ({ k: k2, l, ok: false })), resultado: 'observado' }; addHist(t, 'Observado y devuelto al área usuaria', chk.obs); await saveTramite(t); toast('Devuelto al área usuaria'); return; }
     const registro = nextRegistro();
-    const r = await openStamper({ bytes: await bytesOf(), title: `Recepción · ${t.codigo}`, tools: ['recepcion', 'firma', 'postfirma', 'texto'], required: ['recepcion'],
-      auto: [{ kind: 'recepcion' }], data: { registro, folios: t.folios }, note: 'El sello de recepción ya está colocado arriba a la derecha; muévelo si tapa algo' });
-    if (!r) return;
-    await setPdf(t, r.bytes, 'Sello de recepción'); t.registro = registro; (t.registros = t.registros || []).push(registro);
+    t.registro = registro; (t.registros = t.registros || []).push(registro);
     t.checklist = { fecha: new Date().toISOString(), por: me().nombre, items: chk.items, resultado: 'conforme' };
     t.recepcion = { fecha: new Date().toISOString(), por: me().nombre, cargo: me().cargo, hash: t.hash };
-    addHist(t, 'Recibido y sellado en Secretaría', `Reg. N.° ${registro} · ${t.folios} folios · Verificación: ${chk.items.length} de ${chk.items.length} requisitos`);
+    addHist(t, 'Recibido en Secretaría', `Reg. N.° ${registro} · ${t.folios} folios · Verificación: ${chk.items.length} de ${chk.items.length} requisitos`);
     t.estado = 'derivado'; addHist(t, 'Elevado a Jefatura para revisión', 'Para su revisión y trámite correspondiente.');
     await saveTramite(t);
     if (rutaOf(t) === 'conformidad') await linkConformidadRecibida(t);
@@ -4136,7 +3771,7 @@ async function runAction(k, t) {
     if (!r) return;
     t.asignadoId = r.resp;
     if (re) addHist(t, `Reasignado a ${userName(r.resp)}`, r.nota);
-    else { t.estado = 'ejecucion'; addHist(t, `Derivado para ejecución a ${userName(r.resp)}`, r.nota); }
+    else { t.estado = 'ejecucion'; addHist(t, `En ejecución por ${userName(r.resp)}`, r.nota); }
     await saveTramite(t); toast(re ? 'Responsable actualizado' : `Derivado a ${userName(r.resp)}`); return;
   }
   if (k === 'atender') {
@@ -4176,30 +3811,16 @@ async function runAction(k, t) {
     if (!motivo) return;
     t.estado = 'observado'; addHist(t, 'Observado y devuelto al área usuaria', motivo); await saveTramite(t); toast('Devuelto al área usuaria'); return;
   }
-  if (k === 'revisar') {
-    const r = await openStamper({ bytes: await bytesOf(), title: `Revisión · ${t.codigo}`, tools: ['revision', 'firma', 'vobo', 'postfirma', 'texto'], required: ['revision', 'firma'],
-      auto: [{ kind: 'revision', fy: 0.24 }], note: 'Coloca también tu firma; puedes añadir un proveído' });
+  if (k === 'derivarJefe') {
+    const r = await askResponsable('Derivar requerimiento', t.asignadoId || (staffAbast().find(x => x.rol === 'especialista') || staffAbast()[0] || {}).id, 'Revisado. Proceder conforme a la normativa vigente.', 'Derivar');
     if (!r) return;
-    const dec = await modal({ title: 'Resultado de la revisión',
-      html: `<form><div class="seg two">
-          <label class="seg-op"><input type="radio" name="dec" value="ok" checked><span>${ic('check')}<span>Conforme<small>Se asigna un responsable y pasa a “Por derivar”</small></span></span></label>
-          <label class="seg-op"><input type="radio" name="dec" value="obs"><span>${ic('alert')}<span>Observar<small>Se devuelve al área usuaria</small></span></span></label></div>
-          <label class="field" id="respWrap" style="margin-top:14px">Asignar la ejecución a<select name="resp">${staffOptions(t.asignadoId || (staffAbast()[0] || {}).id)}</select></label>
-          <label class="field" style="margin-top:14px">Proveído o indicación<textarea class="plain" name="nota" rows="3">Proceder conforme a la normativa vigente.</textarea></label></form>`,
-      buttons: [{ label: 'Cancelar', value: null }, { label: 'Confirmar', cls: 'btn-primary', value: d => {
-        const v = $('[name=dec]:checked', d).value, nota = $('[name=nota]', d).value.trim();
-        if (v === 'obs' && !nota) { toast('Indica el motivo de la observación', 'warn'); return KEEP; }
-        return { v, nota, resp: $('[name=resp]', d).value }; } }],
-      onOpen: d => { $$('[name=dec]', d).forEach(x => x.onchange = () => { const ta = $('[name=nota]', d); $('#respWrap', d).hidden = $('[name=dec]:checked', d).value !== 'ok'; if (x.checked && x.value === 'obs' && /normativa vigente/.test(ta.value)) ta.value = ''; }); } });
-    if (!dec) { toast('No se guardaron los cambios', 'warn'); return; }
-    await setPdf(t, r.bytes, 'Revisión de Jefatura');
-    if (dec.v === 'ok') {
-      t.estado = 'aprobado'; t.asignadoId = dec.resp;
-      addHist(t, 'Revisado, sellado y firmado por Jefatura · conforme', [dec.nota, `Responsable de ejecución: ${userName(dec.resp)}.`].filter(Boolean).join(' '));
-      toast('Conforme: pasa a “Por derivar”');
-    } else { t.estado = 'observado'; addHist(t, 'Revisado por Jefatura · observado', dec.nota); toast('Observado y devuelto al área usuaria'); }
-    await saveTramite(t);
-    return;
+    t.estado = 'aprobado'; t.asignadoId = r.resp; t.revision = { fecha: new Date().toISOString(), por: me().nombre };
+    addHist(t, `Revisado y derivado por Jefatura a ${userName(r.resp)}`, r.nota);
+    await saveTramite(t); toast(`Derivado a ${userName(r.resp)}`); return;
+  }
+  if (k === 'iniciar') {
+    t.estado = 'ejecucion'; addHist(t, `En ejecución por ${userName(t.asignadoId)}`, 'Se inició la atención del requerimiento.');
+    await saveTramite(t); toast('Ejecución iniciada'); return;
   }
   if (k === 'subsanar') {
     const ru = rutaOf(t);
@@ -4207,7 +3828,7 @@ async function runAction(k, t) {
       buttons: [{ label: 'Cancelar', value: null }, { label: `Continuar${ic('arrowR', 16)}`, cls: 'btn-primary', value: d => {
         const data = readReq(d, ru);
         if (ru !== 'documental' && !validateReq(d, ru, data, false)) return KEEP;
-        return { ...data, firmar: $('[name=firmar]:checked', d).value, nota: $('[name=nota]', d).value.trim(), files: d._files.slice(), eett: (d._eett || []).slice() };
+        return { ...data, nota: $('[name=nota]', d).value.trim(), files: d._files.slice(), eett: (d._eett || []).slice() };
       } }],
       onOpen: d => { wireFiles(d); if (ru !== 'documental') wireReqForm(d, t); } });
     if (!form) return;
@@ -4219,7 +3840,6 @@ async function runAction(k, t) {
       const eb = await filesToPdf(form.eett, 'Anexo ' + t.asunto);
       if (eb) { const dt = docTec((t.req || {}).objeto); t.anexos = (t.anexos || []).filter(a => !esDocTec(a)); t.anexos.push({ id: uid(), tipo: dt.cod, nombre: dt.nombre, blob: new Blob([eb], { type: 'application/pdf' }), hash: await sha256(eb), folios: await pdfPageCount(eb) || 0, fecha: new Date().toISOString() }); }
     }
-    if (form.firmar === 'si') { const r = await openStamper({ bytes, title: 'Firmar y sellar el documento', ...AREA_TOOLS }); if (!r) { toast('No se reenvió el trámite', 'warn'); return; } bytes = r.bytes; }
     if (form.files.length && t.barcodePdf) bytes = await stampBarcode(bytes, t);
     await setPdf(t, bytes, 'Documento subsanado'); t.estado = 'enviado'; t.registro = null; t.asignadoId = null; t.checklist = null;
     addHist(t, 'Subsanado y reenviado', form.nota || (form.files.length ? 'Se adjuntó un documento corregido.' : ''));
@@ -4246,23 +3866,15 @@ async function archiveTramite(t) {
 }
 
 /* =====================================================================
-   Perfil: firmas y sellos
+   Mi perfil
    ===================================================================== */
 function renderPerfil() {
-  const u = me(), c = state.config; if (!u) return;
-  const seals = [['selloArea', 'Sello de área', 'Sello redondo de tu oficina.', true], ['postfirma', 'Sello post-firma', 'Va debajo de tu firma con nombre y cargo.', true]];
-  if (u.rol === 'secretaria') seals.push(['recepcion', 'Sello de recepción', 'Se completa solo con fecha, hora, N.° de registro y folios.', false]);
-  if (u.rol === 'jefe') seals.push(['revision', 'Sello de revisión', 'Se completa solo con la fecha y hora de la revisión.', false], ['vobo', 'Visto bueno (V°B°)', 'Para dar conformidad en documentos internos.', false]);
-  const custom = { selloArea: u.selloAreaImg, postfirma: u.postFirmaImg };
+  const u = me(); if (!u) return;
   $('#perfilWrap').innerHTML = `
-    <div class="page-head row-between"><div><h1>Mis firmas y sellos</h1><p>Ingresaste como <b>${esc(u.nombre)}</b> · ${esc(ROLES[u.rol].label)}</p></div>
+    <div class="page-head row-between"><div><h1>Mi perfil</h1><p>Ingresaste como <b>${esc(u.nombre)}</b> · ${esc(ROLES[u.rol].label)}</p></div>
       <button type="button" class="btn btn-ghost" id="pfSwitch">${ic('lock')}Cambiar contraseña</button></div>
     <div class="pf-grid">
       <div class="col">
-        <article class="card"><header class="card-head"><h2>Mi firma</h2></header>
-          <div class="sig-box">${u.firma ? `<img src="${u.firma}" alt="Firma de ${esc(u.nombre)}">` : '<span>Aún no tienes una firma guardada</span>'}</div>
-          <div class="row"><button type="button" class="btn btn-primary" data-pa="firma">${ic('sign')}${u.firma ? 'Cambiar firma' : 'Crear mi firma'}</button>${u.firma ? `<button type="button" class="btn btn-ghost" data-pa="firma-del">${ic('trash')}Quitar</button>` : ''}</div>
-        </article>
         <article class="card"><header class="card-head"><h2>Mis datos</h2></header>
           <form class="form-grid" id="pfForm">
             <label class="field full">Nombres y apellidos<input name="nombre" value="${esc(u.nombre)}" maxlength="60"></label>
@@ -4271,32 +3883,17 @@ function renderPerfil() {
             <label class="field">Correo<input name="correo" type="email" value="${esc(u.correo || '')}" maxlength="80"></label>
             <label class="field">Rol<input value="${esc(ROLES[u.rol].label)}" readonly></label>
           </form>
-          <div class="save-row"><span class="meta-line">Estos datos aparecen en tus sellos.</span><button type="button" class="btn btn-primary" data-pa="datos">Guardar datos</button></div>
+          <div class="save-row"><span class="meta-line">Estos datos aparecen en el seguimiento de cada trámite.</span><button type="button" class="btn btn-primary" data-pa="datos">Guardar datos</button></div>
         </article>
       </div>
-      <div class="col">
-        <article class="card"><header class="card-head"><h2>Mis sellos</h2></header>
-          <div class="swatches"><span class="lbl">Color de tinta</span>${SEAL_COLORS.map(([hex, n]) => `<button type="button" class="sw${(u.color || SEAL_COLORS[0][0]) === hex ? ' cur' : ''}" style="background:${hex}" data-color="${hex}" title="${n}" aria-label="${n}"></button>`).join('')}</div>
-          <div class="seals">${seals.map(([k, l, desc, up]) => {
-            const src = custom[k] || sealPreview(k, u).src;
-            return `<div class="seal"><div class="pv"><img src="${src}" alt="${l}"></div><b>${l}${custom[k] ? ' <span class="tag info">Escaneado</span>' : ''}</b><small>${desc}</small>${up ? `<div class="row"><label class="btn btn-ghost btn-sm"><input type="file" accept="image/*" data-up="${k}" hidden>${ic('upload', 14)}Subir escaneado</label>${custom[k] ? `<button type="button" class="btn btn-ghost btn-sm" data-pa="reset-${k}">Usar generado</button>` : ''}</div>` : ''}</div>`;
-          }).join('')}</div>
-          <p class="small">Si tu oficina ya tiene un sello físico, séllalo en una hoja blanca, tómale una foto y súbela: el fondo se quita solo.</p>
-        </article>
-      </div>
-    </div>
-    <p class="note"><i data-ic="shield" data-size="16"></i>En este prototipo, la firma y los sellos son gráficos (imágenes), y el historial guarda fecha, hora, responsable y una huella del documento. Para que tengan valor legal como firma digital, en la versión final habría que integrarlos con un certificado digital oficial, por ejemplo la plataforma de firma digital del Estado o el DNI electrónico.</p>`;
+    </div>`;
   hydrateIcons($('#perfilWrap'));
   $('#pfSwitch').onclick = () => changePassword(me());
 }
 $('#perfilWrap').addEventListener('click', async e => {
   const u = me();
-  const sw = e.target.closest('[data-color]');
-  if (sw) { u.color = sw.dataset.color; await DB.put('usuarios', u); renderPerfil(); return; }
   const b = e.target.closest('[data-pa]'); if (!b) return;
   const a = b.dataset.pa;
-  if (a === 'firma') { await signaturePad(u); return; }
-  if (a === 'firma-del') { if (await confirmBox('Quitar firma', '¿Quitar tu firma guardada? Los documentos ya firmados no cambian.', 'Quitar')) { u.firma = null; await DB.put('usuarios', u); renderPerfil(); } return; }
   if (a === 'datos') {
     const f = Object.fromEntries(new FormData($('#pfForm'))); Object.keys(f).forEach(k => f[k] = String(f[k]).trim());
     if (!f.nombre || !f.cargo || !f.area) { toast('Nombre, cargo y área no pueden quedar vacíos', 'warn'); return; }
@@ -4307,17 +3904,6 @@ $('#perfilWrap').addEventListener('click', async e => {
     if (!f.entidad || !f.unidad) { toast('Completa el nombre de la entidad y la unidad', 'warn'); return; }
     Object.assign(state.config, f); await DB.put('config', state.config); renderPerfil(); toast('Datos de la entidad guardados'); return;
   }
-  if (a === 'reset-selloArea') { u.selloAreaImg = null; await DB.put('usuarios', u); renderPerfil(); return; }
-  if (a === 'reset-postfirma') { u.postFirmaImg = null; await DB.put('usuarios', u); renderPerfil(); return; }
-});
-$('#perfilWrap').addEventListener('change', async e => {
-  const inp = e.target.closest('[data-up]'); if (!inp) return;
-  const f = inp.files[0]; inp.value = ''; if (!f) return;
-  const src = await imageFileToTransparentPng(f).catch(() => null);
-  if (!src) { toast('No se encontró un sello en la imagen', 'warn'); return; }
-  const u = me();
-  if (inp.dataset.up === 'selloArea') u.selloAreaImg = src; else u.postFirmaImg = src;
-  await DB.put('usuarios', u); renderPerfil(); toast('Sello actualizado');
 });
 
 /* =====================================================================
@@ -4633,7 +4219,7 @@ function expCard(e, ql, showPath) {
     <div class="einfo">
       <div class="etitle">${esc(e.proceso)}</div>
       ${meta ? `<div class="emeta">${meta}</div>` : ''}
-      <div class="emeta">${e.paginas} pág. · ${fmtSize(e.tamano)} · ${fmtDate(e.fecha)}${e.tramiteId ? ' · <span class="tag info">Trámite firmado</span>' : ''}${e.texto && !e.tramiteId ? ' · <span class="tag ok">Texto buscable</span>' : ''}${showPath ? ` · ${ic('folder', 14)} ${esc(folderPath(e.carpetaId))}` : ''}</div>
+      <div class="emeta">${e.paginas} pág. · ${fmtSize(e.tamano)} · ${fmtDate(e.fecha)}${e.tramiteId ? ' · <span class="tag info">Trámite</span>' : ''}${e.texto && !e.tramiteId ? ' · <span class="tag ok">Texto buscable</span>' : ''}${showPath ? ` · ${ic('folder', 14)} ${esc(folderPath(e.carpetaId))}` : ''}</div>
       ${e.obs ? `<div class="emeta">${esc(e.obs)}</div>` : ''}
       ${snip}
     </div>

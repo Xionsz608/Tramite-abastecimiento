@@ -14,16 +14,19 @@ Los requerimientos de las áreas usuarias (bienes, servicios, conformidades, mod
 
 | Rol | Qué hace |
 |---|---|
-| Área usuaria | Envía requerimientos de **bienes, servicios u obras** con su firma y sello, sigue en qué paso están, subsana observaciones y recibe documentos de la Unidad. |
-| Secretaría | Verifica los requisitos, recibe con sello de recepción y N.° de registro, eleva a Jefatura y deriva lo aprobado. |
-| Jefatura | Revisa, sella, firma, asigna al responsable de ejecución y administra usuarios. |
-| Especialista | Ejecuta el requerimiento, registra las etapas del expediente de contratación y lo marca como atendido. |
+| Área usuaria | Sube requerimientos de **bienes, servicios u obras**, sigue en qué paso están, recibe notificaciones, subsana observaciones y recibe documentos de la Unidad. |
+| Secretaría | Verifica los requisitos, recibe con N.° de registro y eleva a Jefatura. |
+| Jefatura | Revisa el requerimiento y lo **deriva** al responsable de su ejecución (o lo observa). Administra usuarios. |
+| Especialista | Inicia la ejecución de lo derivado, registra las etapas del expediente de contratación y lo marca como atendido. |
 
-**Flujo:** área usuaria → Secretaría (recepción) → Jefatura (revisión) → derivación → especialista (ejecución) → archivo en Carpetas.
+**Flujo:** área usuaria → Secretaría (recepción) → Jefatura (revisión y derivación) → especialista (ejecución) → archivo en Carpetas.
+
+**Seguimiento que ve el área usuaria:** En curso → Revisión de Jefatura → Derivado → En ejecución → Concluido.
 
 **Funciones principales**
 
-- Firma y sellos gráficos sobre el PDF: firma dibujada o escaneada, sello de área, post-firma, sello de recepción, sello de revisión, V°B° y proveídos. Se colocan arrastrando sobre la página (PDF.js + pdf-lib).
+- Seguimiento por etapas con barra de avance y notificaciones al área usuaria en cada cambio (recepción, documento abierto por Secretaría o Jefatura, derivación, inicio de la ejecución, observaciones y conclusión).
+- Actividad simultánea: las ventanas abiertas se actualizan solas cuando otro usuario mueve un trámite. En el prototipo funciona entre pestañas del mismo navegador; con servidor llegará a todos los equipos.
 - Código de barras (Code 128) en la primera página, cargo de recepción en PDF y huella SHA-256 de cada versión del documento.
 - Tres tipos de requerimiento: bienes (con EETT), servicios (con TDR) y obras (con expediente técnico).
 - Lista de verificación del requerimiento según la Ley N.° 32069 (EETT/TDR/expediente técnico, finalidad pública, CMN/PMBSO, fichas, catálogos electrónicos, meta y clasificador).
@@ -45,15 +48,16 @@ Todos los nombres, correos y documentos de las cuentas de prueba son ficticios.
 
 ## Limitaciones de esta versión
 
-- **La firma y los sellos son imágenes, no firma digital.** No tienen el valor legal de la firma digital de la Ley N.° 27269. La versión final debe integrarse con un firmador oficial, como la plataforma **Firma Perú**.
-- Los datos viven solo en el navegador de cada equipo: no se comparten entre usuarios ni hay respaldo.
+- El sistema no firma ni sella documentos: el área adjunta el documento ya firmado y sellado. Si más adelante se requiere firma digital con valor legal (Ley N.° 27269), se integraría un firmador oficial, como la plataforma **Firma Perú**.
+- Los datos viven solo en el navegador de cada equipo: no se comparten entre equipos ni hay respaldo. La actualización simultánea solo funciona entre pestañas del mismo navegador.
 - Las marcas de tiempo usan la hora del equipo, no un sello de tiempo acreditado.
 
 ## Próximos pasos
 
 - [ ] Servidor local o nube privada (por ejemplo, Nextcloud) con inicio de sesión por correo institucional.
 - [ ] Base de datos central y almacenamiento de expedientes con OCR y compresión.
-- [ ] Integración con Firma Perú para firmas digitales con validez legal.
+- [ ] Notificaciones en tiempo real entre equipos (WebSocket) y por correo institucional.
+- [ ] Integración opcional con Firma Perú para firmas digitales con validez legal.
 - [ ] Coordinación con el área de informática de la UNA sobre la infraestructura.
 
 ## Importante
