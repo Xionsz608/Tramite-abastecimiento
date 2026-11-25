@@ -2,6 +2,8 @@
 
 Sistema de gestión documentaria y mesa de partes digital para la **Unidad de Abastecimiento** de una entidad pública. Propuesta desarrollada a partir de las prácticas preprofesionales en la Unidad de Abastecimientos de la Universidad Nacional del Altiplano (UNA-Puno).
 
+**Demo en línea:** https://tramite-abastecimiento.vercel.app (se actualiza sola con cada cambio en `main`).
+
 > **Estado: prototipo de prueba.** Todo funciona dentro del navegador: las cuentas, los trámites y los documentos se guardan en el propio equipo (IndexedDB). No hay servidor todavía.
 
 ## El problema
