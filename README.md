@@ -55,7 +55,7 @@ Todos los nombres, correos y documentos de las cuentas de prueba son ficticios.
 1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
 2. En **SQL Editor**, pega y ejecuta `supabase/schema.sql`.
 3. En **Settings → API**, copia la *Project URL* y la clave pública **anon**, y pégalas en `supabase-config.js`. Nunca uses la clave `service_role`.
-4. Publica el cambio. Al abrir el sistema verás el aviso "Base compartida activa" y los trámites se verán en todos los equipos al instante.
+4. (La demo publicada ya viene configurada con su propio proyecto.) Publica el cambio. Al abrir el sistema verás el aviso "Base compartida activa" y los trámites se verán en todos los equipos al instante.
 
 Si `supabase-config.js` está vacío, el sistema funciona como antes (datos en el navegador).
 
