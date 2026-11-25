@@ -14,7 +14,7 @@ Los requerimientos de las áreas usuarias (bienes, servicios, conformidades, mod
 
 | Rol | Qué hace |
 |---|---|
-| Área usuaria | Envía requerimientos con su firma y sello, sigue en qué paso están, subsana observaciones y recibe documentos de la Unidad. |
+| Área usuaria | Envía requerimientos de **bienes, servicios u obras** con su firma y sello, sigue en qué paso están, subsana observaciones y recibe documentos de la Unidad. |
 | Secretaría | Verifica los requisitos, recibe con sello de recepción y N.° de registro, eleva a Jefatura y deriva lo aprobado. |
 | Jefatura | Revisa, sella, firma, asigna al responsable de ejecución y administra usuarios. |
 | Especialista | Ejecuta el requerimiento, registra las etapas del expediente de contratación y lo marca como atendido. |
@@ -25,7 +25,8 @@ Los requerimientos de las áreas usuarias (bienes, servicios, conformidades, mod
 
 - Firma y sellos gráficos sobre el PDF: firma dibujada o escaneada, sello de área, post-firma, sello de recepción, sello de revisión, V°B° y proveídos. Se colocan arrastrando sobre la página (PDF.js + pdf-lib).
 - Código de barras (Code 128) en la primera página, cargo de recepción en PDF y huella SHA-256 de cada versión del documento.
-- Lista de verificación del requerimiento según la Ley N.° 32069 (EETT/TDR, finalidad pública, CMN/PMBSO, fichas, catálogos electrónicos, meta y clasificador).
+- Tres tipos de requerimiento: bienes (con EETT), servicios (con TDR) y obras (con expediente técnico).
+- Lista de verificación del requerimiento según la Ley N.° 32069 (EETT/TDR/expediente técnico, finalidad pública, CMN/PMBSO, fichas, catálogos electrónicos, meta y clasificador).
 - Semáforo de plazos en días hábiles (con feriados nacionales) y control del plazo de pago tras la conformidad (art. 67.3).
 - Expediente de contratación por etapas: mercado, cuantía, estrategia, certificación, selección, orden y pago.
 - Emisión de oficios, memorandos e informes con numeración correlativa, despacho a las áreas y acuse de lectura.
