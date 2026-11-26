@@ -62,7 +62,7 @@ Si `supabase-config.js` está vacío, el sistema funciona como antes (datos en e
 ## Limitaciones de esta versión
 
 - El sistema no firma ni sella documentos: el área adjunta el documento ya firmado y sellado. Si más adelante se requiere firma digital con valor legal (Ley N.° 27269), se integraría un firmador oficial, como la plataforma **Firma Perú**.
-- Sin configurar la base compartida, los datos viven solo en el navegador de cada equipo. Con Supabase activo (ver abajo) se comparten entre equipos, pero es solo para la demo: el acceso es abierto y los PDF se guardan en la base como texto, así que usa únicamente datos ficticios.
+- Sin configurar la base compartida, los datos viven solo en el navegador de cada equipo. Con Supabase activo (ver abajo) se comparten entre equipos, pero es solo para la demo: el acceso es abierto y los PDF se guardan en Supabase Storage (1 GB en el plan gratuito), así que usa únicamente datos ficticios.
 - Las marcas de tiempo usan la hora del equipo, no un sello de tiempo acreditado.
 
 ## Próximos pasos

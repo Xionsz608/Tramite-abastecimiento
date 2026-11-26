@@ -23,3 +23,13 @@ create policy demo_todo on public.registros for all to anon using (true) with ch
 do $$ begin
   alter publication supabase_realtime add table public.registros;
 exception when duplicate_object then null; end $$;
+
+-- Archivos (PDF) en Supabase Storage: 1 GB en el plan gratuito. Bucket privado; acceso abierto solo para la demo.
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('archivos', 'archivos', false, 20971520)
+on conflict (id) do nothing;
+
+drop policy if exists demo_archivos_leer on storage.objects;
+create policy demo_archivos_leer on storage.objects for select to anon using (bucket_id = 'archivos');
+drop policy if exists demo_archivos_subir on storage.objects;
+create policy demo_archivos_subir on storage.objects for insert to anon with check (bucket_id = 'archivos');

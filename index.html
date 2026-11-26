@@ -1186,18 +1186,39 @@ const DB = (() => {
   const mem = Object.fromEntries(STORES.map(s => [s, []]));
   const ORIGEN = Math.random().toString(36).slice(2) + Date.now().toString(36);
   const cloud = { on: false, sb: null, onChange: null };
-  /* Los PDF (Blob) viajan como base64 dentro del JSON */
-  const b2s = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+  /* Los PDF (Blob) se guardan en Supabase Storage (bucket "archivos") y el JSON solo guarda la referencia.
+     El nombre es el SHA-256 del contenido: un mismo archivo se sube una sola vez y se descarga una sola vez por sesión. */
+  const BUCKET = 'archivos', subidos = new Set(), bajados = new Map();
+  const hex = buf => [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
+  async function subir(blob) {
+    const h = hex(await crypto.subtle.digest('SHA-256', await blob.arrayBuffer())), path = 'f/' + h;
+    if (!subidos.has(path)) {
+      const { error } = await cloud.sb.storage.from(BUCKET).upload(path, blob, { contentType: blob.type || 'application/octet-stream', upsert: false });
+      if (error && !/exists|Duplicate|409/i.test(error.message || '')) throw error;
+      subidos.add(path); bajados.set(path, blob);
+    }
+    return path;
+  }
+  async function bajar(path, type) {
+    if (!bajados.has(path)) {
+      bajados.set(path, cloud.sb.storage.from(BUCKET).download(path).then(({ data, error }) => { if (error) throw error; return data.type === type ? data : data.slice(0, data.size, type); }).catch(e => { bajados.delete(path); throw e; }));
+    }
+    return bajados.get(path);
+  }
   const s2b = (b64, type) => { const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type }); };
   async function enc(v) {
-    if (v instanceof Blob) return { __blob: await b2s(v), type: v.type };
+    if (v instanceof Blob) return { __file: await subir(v), type: v.type };
     if (Array.isArray(v)) return Promise.all(v.map(enc));
     if (v && typeof v === 'object') { const o = {}; for (const k of Object.keys(v)) o[k] = await enc(v[k]); return o; }
     return v;
   }
-  function dec(v) {
-    if (Array.isArray(v)) return v.map(dec);
-    if (v && typeof v === 'object') { if (typeof v.__blob === 'string') return s2b(v.__blob, v.type); const o = {}; for (const k of Object.keys(v)) o[k] = dec(v[k]); return o; }
+  async function dec(v) {
+    if (Array.isArray(v)) return Promise.all(v.map(dec));
+    if (v && typeof v === 'object') {
+      if (typeof v.__file === 'string') return bajar(v.__file, v.type);
+      if (typeof v.__blob === 'string') return s2b(v.__blob, v.type); /* datos antiguos en base64 */
+      const o = {}; for (const k of Object.keys(v)) o[k] = await dec(v[k]); return o;
+    }
     return v;
   }
   async function open() {
@@ -1249,7 +1270,7 @@ const DB = (() => {
         for (;;) {
           const { data, error } = await cloud.sb.from('registros').select('data').eq('store', store).order('actualizado').range(from, from + 499);
           if (error) throw error;
-          out.push(...data.map(r => dec(r.data)));
+          out.push(...await Promise.all(data.map(r => dec(r.data))));
           if (data.length < 500) break; from += 500;
         }
         return out;
